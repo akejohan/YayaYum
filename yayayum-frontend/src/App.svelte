@@ -1,34 +1,48 @@
 <script lang="ts">
-  import svelteLogo from './assets/svelte.svg'
-  import viteLogo from '/vite.svg'
-  import Counter from './lib/Counter.svelte'
+  import yayaLogo from "./assets/yayalogo.png";
+  import Users from "./lib/Users.svelte";
 </script>
 
 <main>
   <div>
-    <a href="https://vite.dev" target="_blank" rel="noreferrer">
-      <img src={viteLogo} class="logo" alt="Vite Logo" />
-    </a>
-    <a href="https://svelte.dev" target="_blank" rel="noreferrer">
-      <img src={svelteLogo} class="logo svelte" alt="Svelte Logo" />
-    </a>
+    <span>
+      <img src={yayaLogo} class="logo" alt="Yayalogo" />
+    </span>
   </div>
-  <h1>Vite + Svelte</h1>
+  <h1>YayaYum</h1>
 
   <div class="card">
-    <Counter />
+    <Users />
   </div>
 
   <p>
-    Check out <a href="https://github.com/sveltejs/kit#readme" target="_blank" rel="noreferrer">SvelteKit</a>, the official Svelte app framework powered by Vite!
+    Vem vill du vara idag?
   </p>
 
-  <p class="read-the-docs">
-    Click on the Vite and Svelte logos to learn more
-  </p>
+  <p class="click-your-name">Klicka på ditt namn</p>
 </main>
 
 <style>
+  main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 2em;
+  }
+
+  .card {
+    background-color: rgba(255, 255, 255, 0.8); /* semi-transparent card */
+    border-radius: 16px;
+    padding: 2em;
+    margin-top: 1em;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+  }
+
+  h1 {
+    color: #ff69b4;
+    text-shadow: 1px 1px 2px #fff;
+  }
   .logo {
     height: 6em;
     padding: 1.5em;
@@ -38,10 +52,7 @@
   .logo:hover {
     filter: drop-shadow(0 0 2em #646cffaa);
   }
-  .logo.svelte:hover {
-    filter: drop-shadow(0 0 2em #ff3e00aa);
-  }
-  .read-the-docs {
+  .click-your-name {
     color: #888;
   }
 </style>
