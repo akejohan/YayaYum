@@ -1,6 +1,17 @@
 <script lang="ts">
   import yayaLogo from "./assets/yayalogo.png";
+  import type { User } from "./lib/api";
   import Users from "./lib/Users.svelte";
+  import { AppScreen } from "./lib/types";
+  import MealActions from "./lib/MealActions.svelte";
+
+  let selectedUser: User | null = null;
+  let currentScreen: AppScreen = AppScreen.UserSelection;
+
+  function handleUserClick(user: User) {
+    selectedUser = user;
+    currentScreen = AppScreen.MealActions;
+  }
 </script>
 
 <main>
@@ -12,14 +23,20 @@
   <h1>YayaYum</h1>
 
   <div class="card">
-    <Users />
+    {#if currentScreen === AppScreen.MealActions && selectedUser}
+      <MealActions {selectedUser} />
+    {:else}
+      <Users onUserClick={handleUserClick} />
+    {/if}
   </div>
 
-  <p>
-    Vem vill du vara idag?
-  </p>
+  {#if selectedUser}
+    <p>Idag är du: {selectedUser.username}</p>
+  {:else}
+    <p>Vem vill du vara idag?</p>
 
-  <p class="click-your-name">Klicka på ditt namn</p>
+    <p class="click-your-name">Klicka på ditt namn</p>
+  {/if}
 </main>
 
 <style>
@@ -36,7 +53,7 @@
     border-radius: 16px;
     padding: 2em;
     margin-top: 1em;
-    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
   }
 
   h1 {

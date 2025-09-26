@@ -3,6 +3,8 @@
   import { UsersService } from './api/services/UsersService';
   import type { User } from './api/models/User';
 
+  export let onUserClick: (user: User) => void;
+
   let users: User[] = [];
   let loading = true;
   let error: string | null = null;
@@ -10,13 +12,17 @@
   onMount(async () => {
     try {
       users = await UsersService.getUsers();
-      users.push({ id: 0, username: '+' });
+      //users.push({ id: 0, username: '+' });
     } catch (err) {
       error = (err as Error).message;
     } finally {
       loading = false;
     }
   });
+
+    function handleClick(user: User) {
+    if (onUserClick) onUserClick(user);
+  }
 </script>
 
 {#if loading}
@@ -37,6 +43,7 @@
           cursor: pointer;
           font-size: 0.9rem;
         "
+        onclick={() => handleClick(user)}
       >
         {user.username}
       </button>
