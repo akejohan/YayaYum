@@ -45,13 +45,13 @@
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    padding: 2em;
+    padding: 1em;
   }
 
   .card {
     background-color: rgba(255, 255, 255, 0.8); /* semi-transparent card */
     border-radius: 16px;
-    padding: 2em;
+    padding: 1em;
     margin-top: 1em;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
   }
