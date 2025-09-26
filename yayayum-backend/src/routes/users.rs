@@ -1,4 +1,4 @@
-use axum::{routing::{get, post}, http::StatusCode, Json, Router};
+use axum::{routing::post, http::StatusCode, Json, Router};
 use crate::models::{CreateUser, User};
 use std::fs::{OpenOptions};
 use std::io::{Write, BufRead, BufReader};
