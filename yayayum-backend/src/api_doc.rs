@@ -1,11 +1,13 @@
 use utoipa::OpenApi;
 use crate::models::{CreateUser, User};
 use crate::routes::users::__path_create_user;
+use crate::routes::users::__path_get_users;
 
 #[derive(OpenApi)]
 #[openapi(
     paths(
         create_user,
+        get_users,
     ),
     components(
         schemas(CreateUser, User)
