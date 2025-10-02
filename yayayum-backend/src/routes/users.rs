@@ -5,7 +5,7 @@ use crate::models::{CreateUser, User};
 pub fn routes() -> Router<SqlitePool> {
     Router::new()
         .route("/users", post(create_user).get(get_users))
-        .route("/users/{id}", axum::routing::delete(remove_user))
+        .route("/users/{id}", axum::routing::put(modify_user).delete(remove_user))
 }
 
 #[utoipa::path(
@@ -45,6 +45,39 @@ pub async fn get_users(
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
     Ok(Json(rows))
+}
+
+#[utoipa::path(
+    put,
+    path = "/users/{id}",
+    request_body = CreateUser,
+    params(
+        ("id" = i64, Path, description = "User ID to modify")
+    ),
+    responses(
+        (status = 200, description = "User updated successfully", body = User),
+        (status = 404, description = "User not found")
+    ),
+    tag = "users"
+)]
+pub async fn modify_user(
+    State(pool): State<SqlitePool>,
+    Path(id): Path<i64>,
+    Json(payload): Json<CreateUser>,
+) -> Result<Json<User>, StatusCode> {
+    let row = sqlx::query_as::<_, User>(
+        "UPDATE users SET username = ? WHERE id = ? RETURNING id, username"
+    )
+    .bind(&payload.username)
+    .bind(id)
+    .fetch_one(&pool)
+    .await
+    .map_err(|err| match err {
+        sqlx::Error::RowNotFound => StatusCode::NOT_FOUND,
+        _ => StatusCode::INTERNAL_SERVER_ERROR,
+    })?;
+
+    Ok(Json(row))
 }
 
 #[utoipa::path(

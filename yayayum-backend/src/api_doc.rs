@@ -2,6 +2,7 @@ use utoipa::OpenApi;
 use crate::models::{CreateUser, User};
 use crate::routes::users::__path_create_user;
 use crate::routes::users::__path_get_users;
+use crate::routes::users::__path_modify_user;
 use crate::routes::users::__path_remove_user;
 
 #[derive(OpenApi)]
@@ -9,6 +10,7 @@ use crate::routes::users::__path_remove_user;
     paths(
         create_user,
         get_users,
+        modify_user,
         remove_user,
     ),
     components(
