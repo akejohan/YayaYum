@@ -25,8 +25,10 @@
   <div class="card">
     {#if currentScreen === AppScreen.MealActions && selectedUser}
       <MealActions {selectedUser} />
-    {:else}
-      <Users onUserClick={handleUserClick} />
+    {:else if currentScreen === AppScreen.MealInspiration}
+    <p>Meal Inspiration Screen (to be implemented)</p>
+    {:else if currentScreen === AppScreen.UserSelection}
+    <Users onUserClick={handleUserClick} />
     {/if}
   </div>
 

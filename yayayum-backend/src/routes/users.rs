@@ -1,10 +1,11 @@
-use axum::{routing::post, extract::State, http::StatusCode, Json, Router};
+use axum::{routing::post, extract::{State, Path}, http::StatusCode, Json, Router};
 use sqlx::SqlitePool;
 use crate::models::{CreateUser, User};
 
 pub fn routes() -> Router<SqlitePool> {
     Router::new()
         .route("/users", post(create_user).get(get_users))
+        .route("/users/{id}", axum::routing::delete(remove_user))
 }
 
 #[utoipa::path(
@@ -44,4 +45,33 @@ pub async fn get_users(
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
     Ok(Json(rows))
+}
+
+#[utoipa::path(
+    delete,
+    path = "/users/{id}",
+    params(
+        ("id" = i64, Path, description = "User ID to delete")
+    ),
+    responses(
+        (status = 204, description = "User deleted successfully"),
+        (status = 404, description = "User not found")
+    ),
+    tag = "users"
+)]
+pub async fn remove_user(
+    State(pool): State<SqlitePool>,
+    Path(id): Path<i64>,
+) -> Result<StatusCode, StatusCode> {
+    let result = sqlx::query("DELETE FROM users WHERE id = ?")
+        .bind(id)
+        .execute(&pool)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    if result.rows_affected() == 0 {
+        Err(StatusCode::NOT_FOUND)
+    } else {
+        Ok(StatusCode::NO_CONTENT)
+    }
 }

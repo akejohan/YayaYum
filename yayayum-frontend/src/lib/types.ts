@@ -1,4 +1,5 @@
 export enum AppScreen {
     UserSelection = 'user-selection',
-    MealActions = 'meal-actions'
+    MealActions = 'meal-actions',
+    MealInspiration = 'meal-inspiration',
 }
