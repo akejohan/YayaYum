@@ -5,14 +5,29 @@ mod routes;
 use api_doc::ApiDoc;
 use axum::http::Method;
 use axum::{Router, http};
+use sqlx::sqlite::SqlitePoolOptions;
 use tower_http::cors::Any;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
-
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), sqlx::Error> {
     tracing_subscriber::fmt::init();
     println!("Listening on http://0.0.0.0:3000");
+
+    let pool = SqlitePoolOptions::new()
+        .max_connections(5)
+        .connect("sqlite://users.db")
+        .await?;
+
+    sqlx::query(
+        "CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL
+        )",
+    )
+    .execute(&pool)
+    .await
+    .expect("Could not create users table");
 
     // Add CORS layer
     let layer = tower_http::cors::CorsLayer::new()
@@ -23,8 +38,11 @@ async fn main() {
     let app = Router::new()
         .merge(routes::routes()) // import all routes
         .merge(SwaggerUi::new("/swagger-ui").url("/swagger-ui/openapi.json", ApiDoc::openapi()))
-        .layer(layer);
+        .layer(layer)
+        .with_state(pool);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     axum::serve(listener, app).await.unwrap();
+
+    Ok(())
 }

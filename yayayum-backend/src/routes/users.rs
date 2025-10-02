@@ -1,9 +1,8 @@
-use axum::{routing::post, http::StatusCode, Json, Router};
+use axum::{routing::post, extract::State, http::StatusCode, Json, Router};
+use sqlx::SqlitePool;
 use crate::models::{CreateUser, User};
-use std::fs::{OpenOptions};
-use std::io::{Write, BufRead, BufReader};
 
-pub fn routes() -> Router {
+pub fn routes() -> Router<SqlitePool> {
     Router::new()
         .route("/users", post(create_user).get(get_users))
 }
@@ -12,48 +11,37 @@ pub fn routes() -> Router {
     post,
     path = "/users",
     request_body = CreateUser,
-    responses(
-        (status = 201, description = "User created successfully", body = User)
-    ),
+    responses((status = 201, description = "User created", body = User)),
     tag = "users"
 )]
-pub async fn create_user(Json(payload): Json<CreateUser>) -> (StatusCode, Json<User>) {
-    let user = User { id: 1337, username: payload.username };
+pub async fn create_user(
+    State(pool): State<SqlitePool>,
+    Json(payload): Json<CreateUser>,
+) -> Result<(StatusCode, Json<User>), StatusCode> {
+    let row = sqlx::query_as::<_, User>(
+        "INSERT INTO users (username) VALUES (?) RETURNING id, username"
+    )
+    .bind(&payload.username)
+    .fetch_one(&pool)
+    .await
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
-    // Append user to a file
-    let mut file = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open("users.txt")
-        .expect("Cannot open users.txt");
-
-    let line = format!("{};{}\n", user.id, user.username);
-    file.write_all(line.as_bytes()).expect("Failed to write to file");
-
-    (StatusCode::CREATED, Json(user))
+    Ok((StatusCode::CREATED, Json(row)))
 }
 
 #[utoipa::path(
     get,
     path = "/users",
-    responses(
-        (status = 200, description = "List all users", body = [User])
-    ),
+    responses((status = 200, description = "List users", body = [User])),
     tag = "users"
 )]
-pub async fn get_users() -> Json<Vec<User>> {
-    let mut users = Vec::new();
+pub async fn get_users(
+    State(pool): State<SqlitePool>,
+) -> Result<Json<Vec<User>>, StatusCode> {
+    let rows = sqlx::query_as::<_, User>("SELECT id, username FROM users")
+        .fetch_all(&pool)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
-    if let Ok(file) = OpenOptions::new().read(true).open("users.txt") {
-        let reader = BufReader::new(file);
-        for line in reader.lines().flatten() {
-            if let Some((id, username)) = line.split_once(';') {
-                if let Ok(id) = id.parse::<u64>() {
-                    users.push(User { id, username: username.to_string() });
-                }
-            }
-        }
-    }
-
-    Json(users)
+    Ok(Json(rows))
 }
