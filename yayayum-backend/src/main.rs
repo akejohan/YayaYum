@@ -16,7 +16,7 @@ async fn main() -> Result<(), sqlx::Error> {
 
     let pool = SqlitePoolOptions::new()
         .max_connections(5)
-        .connect("sqlite://users.db")
+        .connect("sqlite://yayayum.db")
         .await?;
 
     sqlx::query(
@@ -28,6 +28,20 @@ async fn main() -> Result<(), sqlx::Error> {
     .execute(&pool)
     .await
     .expect("Could not create users table");
+
+    sqlx::query(
+        "CREATE TABLE IF NOT EXISTS dishes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            description TEXT NOT NULL,
+            price_kr INTEGER NOT NULL,
+            dietary_restrictions TEXT NOT NULL,
+            category TEXT NOT NULL
+        )",
+    )
+    .execute(&pool)
+    .await
+    .expect("Could not create dishes table");
 
     // Add CORS layer
     let layer = tower_http::cors::CorsLayer::new()
