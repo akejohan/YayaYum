@@ -1,0 +1,4 @@
+[build]
+assets = [
+  "yayayum.db", # include file.txt
+]

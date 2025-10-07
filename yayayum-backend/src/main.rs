@@ -3,21 +3,24 @@ mod models;
 mod routes;
 
 use api_doc::ApiDoc;
-use axum::http::Method;
-use axum::{Router, http};
+use axum::{Router, http::Method};
+use shuttle_runtime::SecretStore;
 use sqlx::sqlite::SqlitePoolOptions;
-use tower_http::cors::Any;
+use tower_http::cors::{Any, CorsLayer};
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
-#[tokio::main]
-async fn main() -> Result<(), sqlx::Error> {
-    tracing_subscriber::fmt::init();
-    println!("Listening on http://0.0.0.0:3000");
+
+#[shuttle_runtime::main]
+async fn main(#[shuttle_runtime::Secrets] secrets: SecretStore) -> shuttle_axum::ShuttleAxum {
+    let db_url = secrets
+        .get("DATABASE_URL")
+        .unwrap_or_else(|| "sqlite://yayayum.db".to_string());
 
     let pool = SqlitePoolOptions::new()
         .max_connections(5)
-        .connect("sqlite://yayayum.db")
-        .await?;
+        .connect(&db_url)
+        .await
+        .expect("Failed to connect to database");
 
     sqlx::query(
         "CREATE TABLE IF NOT EXISTS users (
@@ -43,20 +46,18 @@ async fn main() -> Result<(), sqlx::Error> {
     .await
     .expect("Could not create dishes table");
 
-    // Add CORS layer
-    let layer = tower_http::cors::CorsLayer::new()
-        .allow_origin(http::HeaderValue::from_static("http://localhost:5173"))
+    // CORS
+    let cors = CorsLayer::new()
+        .allow_origin(Any)
         .allow_methods(vec![Method::GET, Method::POST, Method::PUT, Method::DELETE])
         .allow_headers(Any);
 
-    let app = Router::new()
-        .merge(routes::routes()) // import all routes
+    // Build router
+    let router = Router::new()
+        .merge(routes::routes())
         .merge(SwaggerUi::new("/swagger-ui").url("/swagger-ui/openapi.json", ApiDoc::openapi()))
-        .layer(layer)
+        .layer(cors)
         .with_state(pool);
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-    axum::serve(listener, app).await.unwrap();
-
-    Ok(())
+    Ok(router.into())
 }
