@@ -4,7 +4,8 @@ import App from './App.svelte'
 import { OpenAPI } from './lib/api'
 
 // Set backend URL
-OpenAPI.BASE = 'http://localhost:3000';
+export const API_URL = import.meta.env.VITE_API_URL;
+OpenAPI.BASE = API_URL;
 
 const app = mount(App, {
   target: document.getElementById('app')!,
