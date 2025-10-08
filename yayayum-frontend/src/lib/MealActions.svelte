@@ -1,17 +1,17 @@
 <script lang="ts">
   import type { User } from "./api/models/User";
-  let { selectedUser }: { selectedUser: User } = $props();
+  import { selectedUser } from "./shared";
 
   function handleEat() {
-    alert(`${selectedUser.username} wants to EAT 🍽️`);
+    alert(`${$selectedUser?.username} wants to EAT 🍽️`);
   }
 
   function handleRate() {
-    alert(`${selectedUser.username} wants to RATE their meal ⭐`);
+    alert(`${$selectedUser?.username} wants to RATE their meal ⭐`);
   }
 </script>
 
-<h2>Välkommen, {selectedUser.username}!</h2>
+<h2>Välkommen, {$selectedUser?.username}!</h2>
 
 <div class="card-container">
   <div class="card eat" on:click={handleEat}>

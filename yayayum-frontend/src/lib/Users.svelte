@@ -2,8 +2,9 @@
   import { onMount } from 'svelte';
   import { UsersService } from './api/services/UsersService';
   import type { User } from './api/models/User';
-
-  export let onUserClick: (user: User) => void;
+  import { selectedUser } from "./shared"
+  import { currentScreen } from "./shared"
+    import { AppScreen } from './types';
 
   let users: User[] = [];
   let loading = true;
@@ -12,17 +13,12 @@
   onMount(async () => {
     try {
       users = await UsersService.getUsers();
-      //users.push({ id: 0, username: '+' });
     } catch (err) {
       error = (err as Error).message;
     } finally {
       loading = false;
     }
   });
-
-    function handleClick(user: User) {
-    if (onUserClick) onUserClick(user);
-  }
 </script>
 
 {#if loading}
@@ -43,7 +39,10 @@
           cursor: pointer;
           font-size: 0.9rem;
         "
-        onclick={() => handleClick(user)}
+        onclick={() => {
+          selectedUser.update(() => user);
+          currentScreen.update(() => AppScreen.MealActions);
+        }}
       >
         {user.username}
       </button>

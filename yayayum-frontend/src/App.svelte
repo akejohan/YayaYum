@@ -1,17 +1,10 @@
 <script lang="ts">
   import yayaLogo from "./assets/yayalogo.png";
-  import type { User } from "./lib/api";
   import Users from "./lib/Users.svelte";
   import { AppScreen } from "./lib/types";
   import MealActions from "./lib/MealActions.svelte";
-
-  let selectedUser: User | null = null;
-  let currentScreen: AppScreen = AppScreen.UserSelection;
-
-  function handleUserClick(user: User) {
-    selectedUser = user;
-    currentScreen = AppScreen.MealActions;
-  }
+  import { selectedUser } from "./lib/shared";
+  import { currentScreen } from "./lib/shared";
 </script>
 
 <main>
@@ -23,17 +16,17 @@
   <h1>YayaYum</h1>
 
   <div class="card">
-    {#if currentScreen === AppScreen.MealActions && selectedUser}
-      <MealActions {selectedUser} />
-    {:else if currentScreen === AppScreen.MealInspiration}
+    {#if $currentScreen === AppScreen.MealActions }
+      <MealActions />
+    {:else if $currentScreen === AppScreen.MealInspiration}
     <p>Meal Inspiration Screen (to be implemented)</p>
-    {:else if currentScreen === AppScreen.UserSelection}
-    <Users onUserClick={handleUserClick} />
+    {:else if $currentScreen === AppScreen.UserSelection}
+    <Users />
     {/if}
   </div>
 
   {#if selectedUser}
-    <p>Idag är du: {selectedUser.username}</p>
+    <p>Idag är du: {$selectedUser?.username}</p>
   {:else}
     <p>Vem vill du vara idag?</p>
 
