@@ -2,76 +2,76 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { CreateUser } from '../models/CreateUser';
-import type { User } from '../models/User';
+import type { CreateDish } from '../models/CreateDish';
+import type { Dish } from '../models/Dish';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
-export class UsersService {
+export class DishesService {
     /**
-     * @returns User List users
+     * @returns Dish List dishes
      * @throws ApiError
      */
-    public static getUsers(): CancelablePromise<Array<User>> {
+    public static getDishes(): CancelablePromise<Array<Dish>> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/users',
+            url: '/dishes',
         });
     }
     /**
      * @param requestBody
-     * @returns User User created
+     * @returns Dish Dish created
      * @throws ApiError
      */
-    public static createUser(
-        requestBody: CreateUser,
-    ): CancelablePromise<User> {
+    public static createDish(
+        requestBody: CreateDish,
+    ): CancelablePromise<Dish> {
         return __request(OpenAPI, {
             method: 'POST',
-            url: '/users',
+            url: '/dishes',
             body: requestBody,
             mediaType: 'application/json',
         });
     }
     /**
-     * @param id User ID to modify
+     * @param id Dish ID to modify
      * @param requestBody
-     * @returns User User updated successfully
+     * @returns Dish Dish updated successfully
      * @throws ApiError
      */
-    public static modifyUser(
+    public static modifyDish(
         id: number,
-        requestBody: CreateUser,
-    ): CancelablePromise<User> {
+        requestBody: CreateDish,
+    ): CancelablePromise<Dish> {
         return __request(OpenAPI, {
             method: 'PUT',
-            url: '/users/{id}',
+            url: '/dishes/{id}',
             path: {
                 'id': id,
             },
             body: requestBody,
             mediaType: 'application/json',
             errors: {
-                404: `User not found`,
+                404: `Dish not found`,
             },
         });
     }
     /**
-     * @param id User ID to delete
+     * @param id Dish ID to remove
      * @returns void
      * @throws ApiError
      */
-    public static removeUser(
+    public static removeDish(
         id: number,
     ): CancelablePromise<void> {
         return __request(OpenAPI, {
             method: 'DELETE',
-            url: '/users/{id}',
+            url: '/dishes/{id}',
             path: {
                 'id': id,
             },
             errors: {
-                404: `User not found`,
+                404: `Dish not found`,
             },
         });
     }
