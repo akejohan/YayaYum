@@ -6,11 +6,11 @@
   </script>
   
   <div class="dish-item">
-    <h3>{dish.name}</h3>
+    <h3>{dish.id} {dish.name}</h3>
     <div class="rating">
-      {#each Array(5) as _, i}
+      <!-- {#each Array(5) as _, i}
         <span class="star" class:filled={i < rating}>★</span>
-      {/each}
+      {/each} -->
     </div>
   </div>
   
