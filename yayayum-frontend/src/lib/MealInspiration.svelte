@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { DishesService, type Dish } from "./api";
+    import DishListItem from "./DishListItem.svelte";
 
     let dishes: Dish[] = [];
     let loading = true;
@@ -24,9 +25,21 @@
 {:else if dishes.length === 0}
     <p>No meals found.</p>
 {:else}
-    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-        {#each dishes as dish}
-            <p>{dish.description}</p>
-        {/each}
+    <div class="dish-list">
+        {#if dishes.length > 0}
+            {#each dishes as dish (dish.id)}
+                <DishListItem {dish} />
+            {/each}
+        {:else}
+            <p>Inga rätter tillgängliga just nu 🍶</p>
+        {/if}
     </div>
 {/if}
+
+<style>
+    .dish-list {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+</style>
