@@ -49,11 +49,11 @@
   }
 
   .card.eat {
-    background: linear-gradient(135deg, #ff6b6b, #ff8787);
+    background: linear-gradient(135deg, #ffb3b3, #e88b8b);
   }
 
   .card.rate {
-    background: linear-gradient(135deg, #4ecdc4, #70e1f5);
+    background: linear-gradient(135deg, #fcd86d, #e7dd98);
   }
 
   .card:hover {
