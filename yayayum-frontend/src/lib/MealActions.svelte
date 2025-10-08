@@ -1,9 +1,10 @@
 <script lang="ts">
   import type { User } from "./api/models/User";
-  import { selectedUser } from "./shared";
+  import { currentScreen, selectedUser } from "./shared";
+    import { AppScreen } from "./types";
 
   function handleEat() {
-    alert(`${$selectedUser?.username} wants to EAT 🍽️`);
+    currentScreen.update(() => AppScreen.MealInspiration);
   }
 
   function handleRate() {

@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { UsersService } from './api/services/UsersService';
-  import type { User } from './api/models/User';
-  import { selectedUser } from "./shared"
-  import { currentScreen } from "./shared"
-    import { AppScreen } from './types';
+  import { onMount } from "svelte";
+  import { UsersService } from "./api/services/UsersService";
+  import type { User } from "./api/models/User";
+  import { selectedUser } from "./shared";
+  import { currentScreen } from "./shared";
+  import { AppScreen } from "./types";
 
   let users: User[] = [];
   let loading = true;
@@ -30,7 +30,7 @@
 {:else}
   <div style="display: flex; flex-wrap: wrap; gap: 8px;">
     {#each users as user}
-      <button 
+      <button
         style="
           padding: 6px 12px;
           border-radius: 12px;

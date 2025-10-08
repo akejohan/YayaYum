@@ -5,6 +5,7 @@
   import MealActions from "./lib/MealActions.svelte";
   import { selectedUser } from "./lib/shared";
   import { currentScreen } from "./lib/shared";
+    import MealInspiration from "./lib/MealInspiration.svelte";
 </script>
 
 <main>
@@ -19,7 +20,7 @@
     {#if $currentScreen === AppScreen.MealActions }
       <MealActions />
     {:else if $currentScreen === AppScreen.MealInspiration}
-    <p>Meal Inspiration Screen (to be implemented)</p>
+     <MealInspiration />
     {:else if $currentScreen === AppScreen.UserSelection}
     <Users />
     {/if}
