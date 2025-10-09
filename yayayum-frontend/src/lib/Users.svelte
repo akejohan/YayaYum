@@ -4,7 +4,7 @@
   import type { User } from "./api/models/User";
   import { selectedUser } from "./shared";
   import { currentScreen } from "./shared";
-  import { AppScreen } from "./types";
+  import { Component } from "./types";
 
   let users: User[] = [];
   let loading = true;
@@ -41,7 +41,7 @@
         "
         onclick={() => {
           selectedUser.update(() => user);
-          currentScreen.update(() => AppScreen.MealActions);
+          currentScreen.update(() => Component.MealActions);
         }}
       >
         {user.username}

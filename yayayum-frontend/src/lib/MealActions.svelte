@@ -1,10 +1,10 @@
 <script lang="ts">
   import type { User } from "./api/models/User";
   import { currentScreen, selectedUser } from "./shared";
-    import { AppScreen } from "./types";
+    import { Component } from "./types";
 
   function handleEat() {
-    currentScreen.update(() => AppScreen.MealInspiration);
+    currentScreen.update(() => Component.MealInspiration);
   }
 
   function handleRate() {
