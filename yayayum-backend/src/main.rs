@@ -3,13 +3,13 @@ mod models;
 mod routes;
 
 use api_doc::ApiDoc;
-use axum::{Router, http::Method};
+use axum::{Router, http::Method, response::Redirect, routing::get};
 use shuttle_runtime::SecretStore;
 use sqlx::sqlite::SqlitePoolOptions;
 use tower_http::cors::{Any, CorsLayer};
+use tower_http::services::ServeDir;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
-use tower_http::services::ServeDir;
 
 #[shuttle_runtime::main]
 async fn main(#[shuttle_runtime::Secrets] secrets: SecretStore) -> shuttle_axum::ShuttleAxum {
@@ -53,11 +53,15 @@ async fn main(#[shuttle_runtime::Secrets] secrets: SecretStore) -> shuttle_axum:
         .allow_methods(vec![Method::GET, Method::POST, Method::PUT, Method::DELETE])
         .allow_headers(Any);
 
+    let static_files = Router::new()
+        .route("/manage", get(|| async { Redirect::to("/?view=manage") })) // Manage route
+        .merge(Router::new().fallback_service(ServeDir::new("assets"))); // Static files
+
     // Build router
     let router = Router::new()
         .merge(routes::routes())
         .merge(SwaggerUi::new("/swagger-ui").url("/swagger-ui/openapi.json", ApiDoc::openapi()))
-        .merge(Router::new().fallback_service(ServeDir::new("assets")))
+        .merge(static_files)
         .layer(cors)
         .with_state(pool);
 
