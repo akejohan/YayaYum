@@ -4,9 +4,8 @@
   import { currentPage } from "./lib/shared";
   import { Page } from "./lib/types";
 
-  const params = new URLSearchParams(window.location.search);
-  let param = params.get("view");
-  if (param === "manage") {
+  const url = window.location.pathname;
+  if (url === "/manage" || "/manage/") {
     currentPage.set(Page.Manage);
   }
 </script>
