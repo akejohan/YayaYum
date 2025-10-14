@@ -5,7 +5,7 @@
   import { Page } from "./lib/types";
 
   const url = window.location.pathname;
-  if (url === "/manage" || "/manage/") {
+  if (url === "/manage" || url === "/manage/") {
     currentPage.set(Page.Manage);
   }
 </script>
