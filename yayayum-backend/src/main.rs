@@ -1,23 +1,24 @@
 mod api_doc;
-mod database;
 mod models;
 mod routes;
 
 use api_doc::ApiDoc;
 use axum::{Router, http::Method, response::Redirect, routing::get};
-use database::setup_database; // Should return PgPool for Postgres
-use shuttle_runtime::SecretStore;
+use sqlx::PgPool;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::services::ServeDir;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
 #[shuttle_runtime::main]
-async fn main(#[shuttle_runtime::Secrets] secrets: SecretStore) -> shuttle_axum::ShuttleAxum {
-    // Connect to Postgres database
-    let pool = setup_database(secrets)
+async fn main(
+    #[shuttle_shared_db::Postgres] pool: PgPool
+) -> shuttle_axum::ShuttleAxum {
+    // Run database migrations
+    sqlx::migrate!("./migrations")
+        .run(&pool)
         .await
-        .expect("Failed to setup database");
+        .expect("Failed to run database migrations");
 
     // CORS
     let cors = CorsLayer::new()
