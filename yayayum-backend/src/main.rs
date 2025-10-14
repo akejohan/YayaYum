@@ -5,7 +5,7 @@ mod routes;
 
 use api_doc::ApiDoc;
 use axum::{Router, http::Method, response::Redirect, routing::get};
-use database::setup_database;
+use database::setup_database; // Should return PgPool for Postgres
 use shuttle_runtime::SecretStore;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::services::ServeDir;
@@ -14,6 +14,7 @@ use utoipa_swagger_ui::SwaggerUi;
 
 #[shuttle_runtime::main]
 async fn main(#[shuttle_runtime::Secrets] secrets: SecretStore) -> shuttle_axum::ShuttleAxum {
+    // Connect to Postgres database
     let pool = setup_database(secrets)
         .await
         .expect("Failed to setup database");
@@ -25,8 +26,8 @@ async fn main(#[shuttle_runtime::Secrets] secrets: SecretStore) -> shuttle_axum:
         .allow_headers(Any);
 
     let static_files = Router::new()
-        .route("/manage", get(|| async { Redirect::to("/?view=manage") })) // Manage route
-        .merge(Router::new().fallback_service(ServeDir::new("assets"))); // Static files
+        .route("/manage", get(|| async { Redirect::to("/?view=manage") }))
+        .merge(Router::new().fallback_service(ServeDir::new("assets")));
 
     // Build router
     let router = Router::new()

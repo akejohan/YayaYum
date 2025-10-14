@@ -1,5 +1,4 @@
 [build]
 assets = [
-  "assets",
-  "yayayum.db",
+  "assets"
 ]

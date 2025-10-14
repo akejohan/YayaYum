@@ -1,8 +1,8 @@
 use axum::{routing::post, extract::{State, Path}, http::StatusCode, Json, Router};
-use sqlx::{SqlitePool, Row};
+use sqlx::{PgPool, Row};
 use crate::models::{CreateDish, Dish};
 
-pub fn routes() -> Router<SqlitePool> {
+pub fn routes() -> Router<PgPool> {
     Router::new()
         .route("/dishes", post(create_dish).get(get_dishes))
         .route("/dishes/{id}", axum::routing::put(modify_dish).delete(remove_dish))
@@ -16,7 +16,7 @@ pub fn routes() -> Router<SqlitePool> {
     tag = "dishes"
 )]
 pub async fn create_dish(
-    State(pool): State<SqlitePool>,
+    State(pool): State<PgPool>,
     Json(payload): Json<CreateDish>,
 ) -> Result<(StatusCode, Json<Dish>), StatusCode> {
     // Convert enums to strings for SQLite storage
@@ -27,7 +27,7 @@ pub async fn create_dish(
 
     let row = sqlx::query(
         "INSERT INTO dishes (name, description, price_kr, dietary_restrictions, category) 
-         VALUES (?, ?, ?, ?, ?) 
+         VALUES ($1, $2, $3, $4, $5) 
          RETURNING id, name, description, price_kr, dietary_restrictions, category"
     )
     .bind(&payload.name)
@@ -46,7 +46,7 @@ pub async fn create_dish(
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
     let dish = Dish {
-        id: row.get::<i64, _>("id") as u64,
+        id: row.get("id"),
         name: row.get("name"),
         description: row.get("description"),
         price_kr: row.get("price_kr"),
@@ -64,7 +64,7 @@ pub async fn create_dish(
     tag = "dishes"
 )]
 pub async fn get_dishes(
-    State(pool): State<SqlitePool>,
+    State(pool): State<PgPool>,
 ) -> Result<Json<Vec<Dish>>, StatusCode> {
     let rows = sqlx::query(
         "SELECT id, name, description, price_kr, dietary_restrictions, category FROM dishes"
@@ -81,7 +81,7 @@ pub async fn get_dishes(
             .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
         dishes.push(Dish {
-            id: row.get::<i64, _>("id") as u64,
+            id: row.get("id"),
             name: row.get("name"),
             description: row.get("description"),
             price_kr: row.get("price_kr"),
@@ -107,8 +107,8 @@ pub async fn get_dishes(
     tag = "dishes"
 )]
 pub async fn modify_dish(
-    State(pool): State<SqlitePool>,
-    Path(id): Path<i64>,
+    State(pool): State<PgPool>,
+    Path(id): Path<i32>,
     Json(payload): Json<CreateDish>,
 ) -> Result<Json<Dish>, StatusCode> {
     // Convert enums to strings for SQLite storage
@@ -118,8 +118,8 @@ pub async fn modify_dish(
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
     let row = sqlx::query(
-        "UPDATE dishes SET name = ?, description = ?, price_kr = ?, dietary_restrictions = ?, category = ? 
-         WHERE id = ? 
+        "UPDATE dishes SET name = $1, description = $2, price_kr = $3, dietary_restrictions = $4, category = $5 
+         WHERE id = $6 
          RETURNING id, name, description, price_kr, dietary_restrictions, category"
     )
     .bind(&payload.name)
@@ -142,7 +142,7 @@ pub async fn modify_dish(
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
     let dish = Dish {
-        id: row.get::<i64, _>("id") as u64,
+        id: row.get("id"),
         name: row.get("name"),
         description: row.get("description"),
         price_kr: row.get("price_kr"),
@@ -166,10 +166,10 @@ pub async fn modify_dish(
     tag = "dishes"
 )]
 pub async fn remove_dish(
-    State(pool): State<SqlitePool>,
-    Path(id): Path<i64>,
+    State(pool): State<PgPool>,
+    Path(id): Path<i32>,
 ) -> Result<StatusCode, StatusCode> {
-    let result = sqlx::query("DELETE FROM dishes WHERE id = ?")
+    let result = sqlx::query("DELETE FROM dishes WHERE id = $1")
         .bind(id)
         .execute(&pool)
         .await

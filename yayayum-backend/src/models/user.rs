@@ -9,6 +9,6 @@ pub struct CreateUser {
 
 #[derive(Serialize, ToSchema, Deserialize, FromRow)]
 pub struct User {
-    pub id: u64,
+    pub id: i32,
     pub username: String,
 }

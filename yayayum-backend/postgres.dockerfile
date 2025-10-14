@@ -3,8 +3,8 @@ FROM postgres:17
 
 # Optional: set environment variables (you can override these at runtime)
 ENV POSTGRES_USER=postgres
-ENV POSTGRES_PASSWORD=postgres
-ENV POSTGRES_DB=mydb
+ENV POSTGRES_PASSWORD=password
+ENV POSTGRES_DB=yayayum
 
 # Optional: copy initialization SQL scripts into the image
 # Any .sql or .sh file in this folder will run automatically on first startup

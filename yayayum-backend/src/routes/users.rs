@@ -1,8 +1,8 @@
 use axum::{routing::post, extract::{State, Path}, http::StatusCode, Json, Router};
-use sqlx::SqlitePool;
+use sqlx::PgPool;
 use crate::models::{CreateUser, User};
 
-pub fn routes() -> Router<SqlitePool> {
+pub fn routes() -> Router<PgPool> {
     Router::new()
         .route("/users", post(create_user).get(get_users))
         .route("/users/{id}", axum::routing::put(modify_user).delete(remove_user))
@@ -16,11 +16,11 @@ pub fn routes() -> Router<SqlitePool> {
     tag = "users"
 )]
 pub async fn create_user(
-    State(pool): State<SqlitePool>,
+    State(pool): State<PgPool>,
     Json(payload): Json<CreateUser>,
 ) -> Result<(StatusCode, Json<User>), StatusCode> {
     let row = sqlx::query_as::<_, User>(
-        "INSERT INTO users (username) VALUES (?) RETURNING id, username"
+        "INSERT INTO users (username) VALUES ($1) RETURNING id, username"
     )
     .bind(&payload.username)
     .fetch_one(&pool)
@@ -37,7 +37,7 @@ pub async fn create_user(
     tag = "users"
 )]
 pub async fn get_users(
-    State(pool): State<SqlitePool>,
+    State(pool): State<PgPool>,
 ) -> Result<Json<Vec<User>>, StatusCode> {
     let rows = sqlx::query_as::<_, User>("SELECT id, username FROM users")
         .fetch_all(&pool)
@@ -61,12 +61,12 @@ pub async fn get_users(
     tag = "users"
 )]
 pub async fn modify_user(
-    State(pool): State<SqlitePool>,
-    Path(id): Path<i64>,
+    State(pool): State<PgPool>,
+    Path(id): Path<i32>,
     Json(payload): Json<CreateUser>,
 ) -> Result<Json<User>, StatusCode> {
     let row = sqlx::query_as::<_, User>(
-        "UPDATE users SET username = ? WHERE id = ? RETURNING id, username"
+        "UPDATE users SET username = $1 WHERE id = $2 RETURNING id, username"
     )
     .bind(&payload.username)
     .bind(id)
@@ -93,10 +93,10 @@ pub async fn modify_user(
     tag = "users"
 )]
 pub async fn remove_user(
-    State(pool): State<SqlitePool>,
-    Path(id): Path<i64>,
+    State(pool): State<PgPool>,
+    Path(id): Path<i32>,
 ) -> Result<StatusCode, StatusCode> {
-    let result = sqlx::query("DELETE FROM users WHERE id = ?")
+    let result = sqlx::query("DELETE FROM users WHERE id = $1")
         .bind(id)
         .execute(&pool)
         .await
