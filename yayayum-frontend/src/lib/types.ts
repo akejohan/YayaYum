@@ -2,6 +2,7 @@ export enum Component {
     UserSelection = 'user-selection',
     MealActions = 'meal-actions',
     MealInspiration = 'meal-inspiration',
+    RateMeal = 'rate-meal',
 }
 
 export enum Page {

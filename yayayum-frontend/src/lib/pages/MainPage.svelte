@@ -6,6 +6,7 @@
     import { selectedUser } from "../../lib/shared";
     import { currentScreen } from "../../lib/shared";
     import MealInspiration from "../../lib/MealInspiration.svelte";
+    import RateMeal from "../../lib/RateMeal.svelte";
     import ManagePage from "../../lib/ManagePage.svelte";
 </script>
 
@@ -22,6 +23,8 @@
             <MealActions />
         {:else if $currentScreen === Component.MealInspiration}
             <MealInspiration />
+        {:else if $currentScreen === Component.RateMeal}
+            <RateMeal />
         {:else if $currentScreen === Component.UserSelection}
             <Users />
         {/if}

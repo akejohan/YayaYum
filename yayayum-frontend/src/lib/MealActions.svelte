@@ -8,7 +8,7 @@
   }
 
   function handleRate() {
-    alert(`${$selectedUser?.username} wants to RATE their meal ⭐`);
+    currentScreen.update(() => Component.RateMeal);
   }
 </script>
 
