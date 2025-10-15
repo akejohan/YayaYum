@@ -3,16 +3,19 @@
     import { UsersService } from "./api/services/UsersService";
     import { DishesService } from "./api/services/DishesService";
     import type { User } from "./api/models/User";
-    import { selectedUser } from "./shared";
-    import { currentScreen } from "./shared";
-    import { Component } from "./types";
-    import type { CreateUser, Dish } from "./api";
+    import type { Dish } from "./api/models/Dish";
+    import UserManagement from "./components/UserManagement.svelte";
+    import DishManagement from "./components/DishManagement.svelte";
+    import CollapsibleSection from "./components/CollapsibleSection.svelte";
 
     let users: User[] = [];
     let dishes: Dish[] = [];
     let loading = true;
     let error: string | null = null;
-    let newUsername: string = "";
+    
+    // Collapsible section states
+    let usersOpen = true;
+    let dishesOpen = true;
 
     onMount(async () => {
         try {
@@ -25,88 +28,117 @@
         }
     });
 
-    function confirmAndDelete(userId: number) {
-        if (confirm("Are you sure you want to delete this user?")) {
-            UsersService.removeUser(userId);
-            // Remove user from local list
-            users = users.filter((user) => user.id !== userId);
-        }
+    // Event handlers for user management
+    function handleUserAdded(event: CustomEvent<User>) {
+        users = [...users, event.detail];
+    }
+
+    function handleUserDeleted(event: CustomEvent<number>) {
+        users = users.filter(user => user.id !== event.detail);
+    }
+
+    // Event handlers for dish management
+    function handleDishAdded(event: CustomEvent<Dish>) {
+        dishes = [...dishes, event.detail];
+    }
+
+    function handleDishUpdated(event: CustomEvent<Dish>) {
+        dishes = dishes.map(dish => dish.id === event.detail.id ? event.detail : dish);
+    }
+
+    function handleDishDeleted(event: CustomEvent<number>) {
+        dishes = dishes.filter(dish => dish.id !== event.detail);
     }
 </script>
 
 {#if loading}
-    <p>Loading users and dishes...</p>
-{:else if error}
-    <p style="color: red;">Error: {error}</p>
-{:else if users.length === 0}
-    <p>No users/dishes found.</p>
-{:else}
-    <h3>Add user</h3>
-    <input type="text" placeholder="Username" bind:value={newUsername} />
-    <button onclick={() => {
-        UsersService.createUser({username: newUsername})
-        }}>
-        Add User
-    </button>
-    
-    <h3>Remove user</h3>
-    <div class="list">
-        {#each users as user}
-            <div class="list-item">
-                <p>{user.id} - {user.username}</p>
-                <button
-                    class="remove-button"
-                    onclick={() => {
-                        confirmAndDelete(user.id);
-                    }}
-                >
-                    X
-                </button>
-            </div>
-        {/each}
+    <div class="loading">
+        <p>Loading users and dishes...</p>
     </div>
-
-    <h3>Remove dish</h3>
-    <div class="list">
-        {#each dishes as dish}
-            <div class="list-item">
-                <p>{dish.id} - {dish.name}</p>
-                <button
-                    class="remove-button"
-                    onclick={() => {
-                        DishesService.removeDish(dish.id);
-                        dishes = dishes.filter((d) => d.id !== dish.id);
-                    }}
-                >
-                    X
-                </button>
-            </div>
-        {/each}
+{:else if error}
+    <div class="error-container">
+        <p class="error">Error: {error}</p>
+    </div>
+{:else}
+    <div class="manage-page">
+        <h2>Management Dashboard</h2>
+        
+        <CollapsibleSection 
+            title="User Management" 
+            icon="👥" 
+            bind:isOpen={usersOpen}
+        >
+            <svelte:fragment slot="count">
+                {users.length} {users.length === 1 ? 'user' : 'users'}
+            </svelte:fragment>
+            
+            <UserManagement 
+                {users}
+                on:userAdded={handleUserAdded}
+                on:userDeleted={handleUserDeleted}
+            />
+        </CollapsibleSection>
+        
+        <CollapsibleSection 
+            title="Dish Management" 
+            icon="🍽️" 
+            bind:isOpen={dishesOpen}
+        >
+            <svelte:fragment slot="count">
+                {dishes.length} {dishes.length === 1 ? 'dish' : 'dishes'}
+            </svelte:fragment>
+            
+            <DishManagement 
+                {dishes}
+                on:dishAdded={handleDishAdded}
+                on:dishUpdated={handleDishUpdated}
+                on:dishDeleted={handleDishDeleted}
+            />
+        </CollapsibleSection>
     </div>
 {/if}
 
 <style>
-    .list {
+    .loading {
         display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    .list-item {
-        display: flex;
+        justify-content: center;
         align-items: center;
+        min-height: 200px;
+        font-size: 1.1em;
+        color: #666;
     }
 
-    .remove-button {
-        margin-left: 8px;
-        background-color: red;
-        color: white;
-        border: none;
-        padding: 4px 8px;
-        cursor: pointer;
+    .error-container {
+        display: flex;
+        justify-content: center;
+        margin: 20px 0;
     }
 
-    .remove-button:hover {
-        background-color: darkred;
+    .error {
+        color: #dc3545;
+        font-weight: 500;
+        padding: 12px 20px;
+        background-color: #f8d7da;
+        border: 1px solid #f5c6cb;
+        border-radius: 8px;
+    }
+
+    .manage-page {
+        max-width: 900px;
+        margin: 0 auto;
+        min-height: 100vh;
+    }
+
+    .manage-page h2 {
+        text-align: center;
+        color: #2d3748;
+        margin-bottom: 40px;
+        font-size: 2.5em;
+        font-weight: 700;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
     }
 </style>

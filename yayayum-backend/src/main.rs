@@ -3,7 +3,7 @@ mod models;
 mod routes;
 
 use api_doc::ApiDoc;
-use axum::{Router, http::Method, response::Redirect, routing::get};
+use axum::{Router, http::Method};
 use sqlx::PgPool;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::services::{ServeDir, ServeFile};
@@ -27,10 +27,7 @@ async fn main(
         .allow_headers(Any);
 
     let static_files = Router::new()
-        // .route("/manage", get(|| async { Redirect::to("/?view=manage") }))
-        .merge(Router::new()
-        .fallback_service(ServeDir::new("assets").not_found_service(ServeFile::new("assets/index.html")))
-    );
+        .fallback_service(ServeDir::new("assets").not_found_service(ServeFile::new("assets/index.html")));
 
     // Build router
     let router = Router::new()
