@@ -19,7 +19,7 @@
 </script>
 
 {#if loading}
-    <p>Loading meals...</p>
+    <p>Ringer yayamee...</p>
 {:else if error}
     <p style="color: red;">Error: {error}</p>
 {:else if dishes.length === 0}

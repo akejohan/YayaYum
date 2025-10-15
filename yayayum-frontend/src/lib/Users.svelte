@@ -22,7 +22,7 @@
 </script>
 
 {#if loading}
-  <p>Loading users...</p>
+  <p>Kontaktar firefly...</p>
 {:else if error}
   <p style="color: red;">Error: {error}</p>
 {:else if users.length === 0}

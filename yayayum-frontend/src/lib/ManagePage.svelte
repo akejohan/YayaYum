@@ -53,7 +53,7 @@
 
 {#if loading}
     <div class="loading">
-        <p>Loading users and dishes...</p>
+        <p>Ringer johan...</p>
     </div>
 {:else if error}
     <div class="error-container">

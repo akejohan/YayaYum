@@ -30,6 +30,7 @@ pub enum DishCategory {
 #[derive(Serialize, ToSchema, Deserialize, FromRow)]
 pub struct Dish {
     pub id: i32,
+    pub nr: i32,
     pub name: String,
     pub description: String,
     pub price_kr: i32,
@@ -39,6 +40,7 @@ pub struct Dish {
 
 #[derive(Deserialize, ToSchema)]
 pub struct CreateDish {
+    pub nr: i32,
     pub name: String,
     pub description: String,
     pub price_kr: i32,

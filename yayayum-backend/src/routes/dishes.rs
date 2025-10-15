@@ -26,10 +26,11 @@ pub async fn create_dish(
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
     let row = sqlx::query(
-        "INSERT INTO dishes (name, description, price_kr, dietary_restrictions, category) 
-         VALUES ($1, $2, $3, $4, $5) 
-         RETURNING id, name, description, price_kr, dietary_restrictions, category"
+        "INSERT INTO dishes (nr, name, description, price_kr, dietary_restrictions, category) 
+         VALUES ($1, $2, $3, $4, $5, $6) 
+         RETURNING id, nr, name, description, price_kr, dietary_restrictions, category"
     )
+    .bind(payload.nr)
     .bind(&payload.name)
     .bind(&payload.description)
     .bind(payload.price_kr)
@@ -47,6 +48,7 @@ pub async fn create_dish(
 
     let dish = Dish {
         id: row.get("id"),
+        nr: row.get("nr"),
         name: row.get("name"),
         description: row.get("description"),
         price_kr: row.get("price_kr"),
@@ -67,7 +69,7 @@ pub async fn get_dishes(
     State(pool): State<PgPool>,
 ) -> Result<Json<Vec<Dish>>, StatusCode> {
     let rows = sqlx::query(
-        "SELECT id, name, description, price_kr, dietary_restrictions, category FROM dishes"
+        "SELECT id, nr, name, description, price_kr, dietary_restrictions, category FROM dishes"
     )
     .fetch_all(&pool)
     .await
@@ -82,6 +84,7 @@ pub async fn get_dishes(
 
         dishes.push(Dish {
             id: row.get("id"),
+            nr: row.get("nr"),
             name: row.get("name"),
             description: row.get("description"),
             price_kr: row.get("price_kr"),
@@ -118,10 +121,11 @@ pub async fn modify_dish(
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
     let row = sqlx::query(
-        "UPDATE dishes SET name = $1, description = $2, price_kr = $3, dietary_restrictions = $4, category = $5 
-         WHERE id = $6 
-         RETURNING id, name, description, price_kr, dietary_restrictions, category"
+        "UPDATE dishes SET nr = $1, name = $2, description = $3, price_kr = $4, dietary_restrictions = $5, category = $6 
+         WHERE id = $7 
+         RETURNING id, nr, name, description, price_kr, dietary_restrictions, category"
     )
+    .bind(payload.nr)
     .bind(&payload.name)
     .bind(&payload.description)
     .bind(payload.price_kr)
@@ -143,6 +147,7 @@ pub async fn modify_dish(
 
     let dish = Dish {
         id: row.get("id"),
+        nr: row.get("nr"),
         name: row.get("name"),
         description: row.get("description"),
         price_kr: row.get("price_kr"),
