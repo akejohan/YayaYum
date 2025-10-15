@@ -14,11 +14,42 @@ use utoipa_swagger_ui::SwaggerUi;
 async fn main(
     #[shuttle_shared_db::Postgres] pool: PgPool
 ) -> shuttle_axum::ShuttleAxum {
-    // Run database migrations
-    sqlx::migrate!("./migrations")
-        .run(&pool)
+    // Create tables manually
+    sqlx::query(
+        "CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            username TEXT NOT NULL
+        )"
+    )
+    .execute(&pool)
+    .await
+    .expect("Failed to create users table");
+
+    sqlx::query(
+        "CREATE TABLE IF NOT EXISTS dishes (
+            id SERIAL PRIMARY KEY,
+            nr INTEGER NOT NULL,
+            name TEXT NOT NULL,
+            description TEXT NOT NULL,
+            price_kr INTEGER NOT NULL,
+            dietary_restrictions TEXT NOT NULL,
+            category TEXT NOT NULL
+        )"
+    )
+    .execute(&pool)
+    .await
+    .expect("Failed to create dishes table");
+
+    // Create indexes
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_dishes_category ON dishes(category)")
+        .execute(&pool)
         .await
-        .expect("Failed to run database migrations");
+        .ok();
+    
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_dishes_nr ON dishes(nr)")
+        .execute(&pool)
+        .await
+        .ok();
 
     // CORS
     let cors = CorsLayer::new()
