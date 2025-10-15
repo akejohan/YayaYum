@@ -6,7 +6,7 @@ use api_doc::ApiDoc;
 use axum::{Router, http::Method, response::Redirect, routing::get};
 use sqlx::PgPool;
 use tower_http::cors::{Any, CorsLayer};
-use tower_http::services::ServeDir;
+use tower_http::services::{ServeDir, ServeFile};
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
@@ -27,8 +27,10 @@ async fn main(
         .allow_headers(Any);
 
     let static_files = Router::new()
-        .route("/manage", get(|| async { Redirect::to("/?view=manage") }))
-        .merge(Router::new().fallback_service(ServeDir::new("assets")));
+        // .route("/manage", get(|| async { Redirect::to("/?view=manage") }))
+        .merge(Router::new()
+        .fallback_service(ServeDir::new("assets").not_found_service(ServeFile::new("assets/index.html")))
+    );
 
     // Build router
     let router = Router::new()
