@@ -10,7 +10,6 @@ CREATE TABLE IF NOT EXISTS users (
 -- Create dishes table  
 CREATE TABLE IF NOT EXISTS dishes (
     id SERIAL PRIMARY KEY,
-    nr INTEGER NOT NULL,
     name TEXT NOT NULL,
     description TEXT NOT NULL,
     price_kr INTEGER NOT NULL,

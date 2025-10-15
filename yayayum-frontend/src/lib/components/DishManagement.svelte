@@ -95,7 +95,7 @@
                 <div class="dish-item">
                     <div class="dish-info">
                         <div class="dish-header">
-                            <h4 class="dish-name">{dish.name}</h4>
+                            <h4 class="dish-name">#{dish.nr} {dish.name}</h4>
                             <span class="dish-price">{dish.price_kr} kr</span>
                         </div>
                         <p class="dish-description">{dish.description}</p>

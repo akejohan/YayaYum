@@ -12,6 +12,7 @@
     let dishName: string = "";
     let dishDescription: string = "";
     let dishPrice: number = 0;
+    let dishNr: number = 0;
     let dishCategory: DishCategory = DishCategory.WOK_WITH_NOODLES;
     let selectedDietaryRestrictions: DietaryRestriction[] = [];
     let error: string | null = null;
@@ -21,6 +22,7 @@
         dishName = dish.name;
         dishDescription = dish.description;
         dishPrice = dish.price_kr;
+        dishNr = dish.nr;
         dishCategory = dish.category;
         selectedDietaryRestrictions = [...dish.dietary_restrictions];
     }
@@ -34,6 +36,7 @@
         dishName = "";
         dishDescription = "";
         dishPrice = 0;
+        dishNr = 0;
         dishCategory = DishCategory.WOK_WITH_NOODLES;
         selectedDietaryRestrictions = [];
         error = null;
@@ -52,6 +55,10 @@
             error = "Price must be greater than 0";
             return false;
         }
+        if (dishNr <= 0) {
+            error = "Dish number must be greater than 0";
+            return false;
+        }
         error = null;
         return true;
     }
@@ -65,6 +72,7 @@
             name: dishName,
             description: dishDescription,
             price_kr: dishPrice,
+            nr: dishNr,
             category: dishCategory,
             dietary_restrictions: selectedDietaryRestrictions
         };
@@ -129,6 +137,18 @@
             bind:value={dishPrice} 
             min="0" 
             step="0.01" 
+        />
+    </div>
+
+    <div class="form-group">
+        <label for="dish-nr">Dish Number:</label>
+        <input 
+            id="dish-nr"
+            type="number" 
+            placeholder="Enter dish number" 
+            bind:value={dishNr} 
+            min="1" 
+            step="1" 
         />
     </div>
     

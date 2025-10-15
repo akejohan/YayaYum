@@ -10,6 +10,7 @@ export type Dish = {
     dietary_restrictions: Array<DietaryRestriction>;
     id: number;
     name: string;
+    nr: number;
     price_kr: number;
 };
 

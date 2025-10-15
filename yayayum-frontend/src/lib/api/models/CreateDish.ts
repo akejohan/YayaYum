@@ -9,6 +9,7 @@ export type CreateDish = {
     description: string;
     dietary_restrictions: Array<DietaryRestriction>;
     name: string;
+    nr: number;
     price_kr: number;
 };
 
