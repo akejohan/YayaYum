@@ -40,6 +40,21 @@ async fn main(
     .await
     .expect("Failed to create dishes table");
 
+    sqlx::query(
+        "CREATE TABLE IF NOT EXISTS ratings (
+            id SERIAL PRIMARY KEY,
+            dish_id INTEGER NOT NULL REFERENCES dishes(id) ON DELETE CASCADE,
+            rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            description TEXT,
+            photo TEXT,
+            date TIMESTAMP NOT NULL DEFAULT NOW()
+        )"
+    )
+    .execute(&pool)
+    .await
+    .expect("Failed to create ratings table");
+
     // Create indexes
     sqlx::query("CREATE INDEX IF NOT EXISTS idx_dishes_category ON dishes(category)")
         .execute(&pool)
@@ -47,6 +62,21 @@ async fn main(
         .ok();
     
     sqlx::query("CREATE INDEX IF NOT EXISTS idx_dishes_nr ON dishes(nr)")
+        .execute(&pool)
+        .await
+        .ok();
+
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_ratings_dish_id ON ratings(dish_id)")
+        .execute(&pool)
+        .await
+        .ok();
+
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_ratings_user_id ON ratings(user_id)")
+        .execute(&pool)
+        .await
+        .ok();
+
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_ratings_rating ON ratings(rating)")
         .execute(&pool)
         .await
         .ok();
