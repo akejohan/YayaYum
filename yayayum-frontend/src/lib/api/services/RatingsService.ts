@@ -31,6 +31,10 @@ export class RatingsService {
             url: '/ratings',
             body: requestBody,
             mediaType: 'application/json',
+            errors: {
+                400: `Bad request - invalid rating value`,
+                409: `Conflict - user already rated today`,
+            },
         });
     }
     /**

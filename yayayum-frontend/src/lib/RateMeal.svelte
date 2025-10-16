@@ -2,7 +2,7 @@
     import { onMount } from "svelte";
     import { selectedUser, currentScreen } from "./shared";
     import { Component } from "./types";
-    import { DishesService, RatingsService } from "./api";
+    import { DishesService, RatingsService, ApiError } from "./api";
     import type { Dish, CreateRating } from "./api";
 
     let dishes: Dish[] = [];
@@ -75,7 +75,13 @@
             // Navigate back to meal actions
             currentScreen.set(Component.MealActions);
         } catch (err) {
-            error = (err as Error).message;
+            if (err instanceof ApiError && err.status === 409) {
+                error = `Du har redan lämnat en recension idag, ${$selectedUser?.username}! Kom tillbaka imorgon för att betygsätta en ny måltid.`;
+            } else if (err instanceof ApiError && err.status === 400) {
+                error = "Ogiltigt betyg. Vänligen välj ett betyg mellan 1-5 stjärnor.";
+            } else {
+                error = (err as Error).message || "Ett fel uppstod när betyget skulle sparas. Försök igen.";
+            }
         } finally {
             isSubmitting = false;
         }
