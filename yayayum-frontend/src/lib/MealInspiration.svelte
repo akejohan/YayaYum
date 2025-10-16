@@ -39,6 +39,11 @@
         return rating ? rating.rating : 0;
     }
 
+    // Get how many times user has eaten a specific dish
+    function getDishEatenCount(dishId: number): number {
+        return userRatings.filter(r => r.dish_id === dishId).length;
+    }
+
     async function fetchData() {
         try {
             loading = true;
@@ -82,7 +87,11 @@
                 <h2 class="category-heading">{getCategoryDisplayName(category)}</h2>
                 <div class="category-dishes">
                     {#each categoryDishes as dish (dish.id)}
-                        <DishListItem {dish} rating={getDishRating(dish.id)} />
+                        <DishListItem 
+                            {dish} 
+                            rating={getDishRating(dish.id)} 
+                            eatenCount={getDishEatenCount(dish.id)}
+                        />
                     {/each}
                 </div>
             </div>

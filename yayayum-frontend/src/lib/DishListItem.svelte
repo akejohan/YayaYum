@@ -3,6 +3,7 @@
   
     export let dish: Dish;
     export let rating: number = 0; // 0–5
+    export let eatenCount: number = 0; // How many times eaten
   </script>
   
   <div class="dish-item">
@@ -20,13 +21,24 @@
         </div>
       {/if}
     </div>
-    <div class="rating">
-      {#each Array(5) as _, i}
-        <span class="star" class:filled={i < rating}>★</span>
-      {/each}
-      {#if rating > 0}
-        <span class="rating-number">({rating})</span>
-      {/if}
+    <div class="dish-stats">
+      <div class="rating">
+        {#each Array(5) as _, i}
+          <span class="star" class:filled={i < rating}>★</span>
+        {/each}
+        {#if rating > 0}
+          <span class="rating-number">({rating})</span>
+        {/if}
+      </div>
+      <div class="eaten-count">
+        <span class="eaten-icon">🍽️</span>
+        <span class="count-number">{eatenCount}</span>
+        {#if eatenCount > 0}
+          <span class="count-label">gånger</span>
+        {:else}
+          <span class="count-label not-eaten">ej prövad</span>
+        {/if}
+      </div>
     </div>
   </div>
   
@@ -101,12 +113,19 @@
       border: 1px solid #bbdefb;
     }
   
-    .rating {
+    .dish-stats {
       flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-top: 0.2rem;
+      min-width: 120px;
+    }
+
+    .rating {
       display: flex;
       align-items: center;
       gap: 2px;
-      margin-top: 0.2rem;
     }
 
     .star {
@@ -123,6 +142,36 @@
       font-size: 0.85rem;
       color: #666;
       margin-left: 0.3rem;
+    }
+
+    .eaten-count {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.85rem;
+      background: rgba(76, 175, 80, 0.1);
+      padding: 0.3rem 0.6rem;
+      border-radius: 16px;
+      border: 1px solid rgba(76, 175, 80, 0.2);
+    }
+
+    .eaten-icon {
+      font-size: 1rem;
+    }
+
+    .count-number {
+      font-weight: 600;
+      color: #2e7d32;
+    }
+
+    .count-label {
+      color: #666;
+      font-size: 0.75rem;
+    }
+
+    .count-label.not-eaten {
+      color: #999;
+      font-style: italic;
     }
   
     /* 📱 Mobilanpassning */
@@ -150,6 +199,19 @@
 
       .dish-price {
         font-size: 0.9rem;
+      }
+
+      .dish-stats {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        min-width: auto;
+        margin-top: 0.5rem;
+      }
+
+      .eaten-count {
+        font-size: 0.8rem;
+        padding: 0.2rem 0.5rem;
       }
     }
   </style>
