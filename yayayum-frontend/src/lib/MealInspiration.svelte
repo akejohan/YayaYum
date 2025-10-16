@@ -67,13 +67,13 @@
     // Get category display names
     function getCategoryDisplayName(category: string): string {
         switch (category) {
-            case DishCategory.WOK_WITH_NOODLES: return "Wok with Noodles";
-            case DishCategory.WOK_WITH_RICE: return "Wok with Rice";
+            case DishCategory.WOK_WITH_NOODLES: return "Wok med nudlar";
+            case DishCategory.WOK_WITH_RICE: return "Wok med ris";
             case DishCategory.RAMEN: return "Ramen";
-            case DishCategory.SPECIAL_DISH: return "Special Dishes";
-            case DishCategory.STEW: return "Stews";
-            case DishCategory.KIDS_MENU: return "Kids Menu";
-            case DishCategory.SIDE_ORDER: return "Side Orders";
+            case DishCategory.SPECIAL_DISH: return "Specialrätter";
+            case DishCategory.STEW: return "Grytor";
+            case DishCategory.KIDS_MENU: return "Barnmeny";
+            case DishCategory.SIDE_ORDER: return "Tillbehör";
             default: return category;
         }
     }
@@ -153,7 +153,7 @@
                 aria-expanded={filtersExpanded}
             >
                 <span class="filter-icon" class:expanded={filtersExpanded}>🔽</span>
-                <span>Filter & Sortering</span>
+                <span>Filters</span>
                 <div class="results-info-compact">
                     {filteredDishes.length} av {dishes.length} rätter
                 </div>
@@ -176,8 +176,8 @@
                     <label for="tried-filter">Status:</label>
                     <select id="tried-filter" bind:value={triedFilter}>
                         <option value="all">Alla rätter</option>
-                        <option value="tried">Prövade rätter</option>
-                        <option value="untried">Nya rätter</option>
+                        <option value="tried">Prövade</option>
+                        <option value="untried">Oprövade</option>
                     </select>
                 </div>
 
@@ -483,7 +483,6 @@
         align-items: center;
         justify-content: center;
         z-index: 1000;
-        padding: 1rem;
     }
 
     .modal-content {
