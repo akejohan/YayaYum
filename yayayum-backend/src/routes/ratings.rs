@@ -14,7 +14,11 @@ pub fn routes() -> Router<PgPool> {
     post,
     path = "/ratings",
     request_body = CreateRating,
-    responses((status = 201, description = "Rating created", body = Rating)),
+    responses(
+        (status = 201, description = "Rating created", body = Rating),
+        (status = 400, description = "Bad request - invalid rating value"),
+        (status = 409, description = "Conflict - user already rated today")
+    ),
     tag = "ratings"
 )]
 pub async fn create_rating(
@@ -38,7 +42,14 @@ pub async fn create_rating(
     .bind(&payload.photo)
     .fetch_one(&pool)
     .await
-    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    .map_err(|e| {
+        // Check if it's a unique constraint violation (one rating per day)
+        if e.to_string().contains("idx_ratings_user_date_unique") {
+            StatusCode::CONFLICT // 409 Conflict - user already rated today
+        } else {
+            StatusCode::INTERNAL_SERVER_ERROR
+        }
+    })?;
 
     let rating = Rating {
         id: row.get("id"),

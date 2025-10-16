@@ -81,6 +81,12 @@ async fn main(
         .await
         .ok();
 
+    // Add unique constraint for one rating per user per day
+    sqlx::query("CREATE UNIQUE INDEX IF NOT EXISTS idx_ratings_user_date_unique ON ratings (user_id, DATE(date))")
+        .execute(&pool)
+        .await
+        .ok();
+
     // CORS
     let cors = CorsLayer::new()
         .allow_origin(Any)
