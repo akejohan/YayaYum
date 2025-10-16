@@ -3,6 +3,7 @@ export enum Component {
     MealActions = 'meal-actions',
     MealInspiration = 'meal-inspiration',
     RateMeal = 'rate-meal',
+    MyRatings = 'my-ratings',
 }
 
 export enum Page {

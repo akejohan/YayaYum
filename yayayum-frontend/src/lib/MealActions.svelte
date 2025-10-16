@@ -10,16 +10,41 @@
   function handleRate() {
     currentScreen.update(() => Component.RateMeal);
   }
+
+  function handleViewRatings() {
+    currentScreen.update(() => Component.MyRatings);
+  }
 </script>
 
 <h2>Välkommen, {$selectedUser?.username}!</h2>
 
 <div class="card-container">
-  <div class="card eat" on:click={handleEat}>
+  <div 
+    class="card eat" 
+    on:click={handleEat}
+    on:keydown={(e) => e.key === 'Enter' && handleEat()}
+    role="button"
+    tabindex="0"
+  >
     Jag ska äta
   </div>
-  <div class="card rate" on:click={handleRate}>
+  <div 
+    class="card rate" 
+    on:click={handleRate}
+    on:keydown={(e) => e.key === 'Enter' && handleRate()}
+    role="button"
+    tabindex="0"
+  >
     Jag har ätit
+  </div>
+  <div 
+    class="card history" 
+    on:click={handleViewRatings}
+    on:keydown={(e) => e.key === 'Enter' && handleViewRatings()}
+    role="button"
+    tabindex="0"
+  >
+    Mina recensioner
   </div>
 </div>
 
@@ -46,6 +71,20 @@
     color: white;
     text-align: center;
     box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    padding: 2rem 1.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card:focus {
+    outline: 3px solid #007acc;
+    outline-offset: 2px;
   }
 
   .card.eat {
@@ -54,6 +93,10 @@
 
   .card.rate {
     background: linear-gradient(135deg, #fcd86d, #e7dd98);
+  }
+
+  .card.history {
+    background: linear-gradient(135deg, #87ceeb, #5f9ea0);
   }
 
   .card:hover {

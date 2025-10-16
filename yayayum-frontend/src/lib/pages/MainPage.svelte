@@ -7,6 +7,7 @@
     import { currentScreen } from "../../lib/shared";
     import MealInspiration from "../../lib/MealInspiration.svelte";
     import RateMeal from "../../lib/RateMeal.svelte";
+    import MyRatings from "../../lib/MyRatings.svelte";
     import ManagePage from "../../lib/ManagePage.svelte";
 
     function goToHomepage() {
@@ -18,16 +19,17 @@
 
 <main>
     <div>
-        <span>
+        <button
+            class="logo-button"
+            on:click={goToHomepage}
+            aria-label="Go to homepage"
+        >
             <img
                 src={yayaLogo}
                 class="logo"
-                alt="Yayalogo - Click to go home"
-                on:click={goToHomepage}
-                tabindex="0"
-                on:keydown={(e) => e.key === "Enter" && goToHomepage()}
+                alt="Yayalogo"
             />
-        </span>
+        </button>
     </div>
     <h1>YayaYum</h1>
 
@@ -38,6 +40,8 @@
             <MealInspiration />
         {:else if $currentScreen === Component.RateMeal}
             <RateMeal />
+        {:else if $currentScreen === Component.MyRatings}
+            <MyRatings />
         {:else if $currentScreen === Component.UserSelection}
             <Users />
         {/if}
@@ -230,23 +234,36 @@
         text-shadow: 1px 1px 2px #fff;
         margin: 0.5em;
     }
+    .logo-button {
+        background: none;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        border-radius: 12px;
+        transition: all 300ms ease;
+    }
+    
+    .logo-button:hover {
+        filter: drop-shadow(0 0 2em #ff69b4aa);
+        transform: scale(1.05);
+    }
+    
+    .logo-button:focus {
+        outline: 3px solid #ff69b4;
+        outline-offset: 4px;
+    }
+    
+    .logo-button:active {
+        transform: scale(0.98);
+    }
+    
     .logo {
         height: 6em;
         padding: 0.5em;
         will-change: filter;
-        transition: all 300ms ease;
-        cursor: pointer;
+        transition: inherit;
         border-radius: 12px;
-    }
-    .logo:hover {
-        filter: drop-shadow(0 0 2em #ff69b4aa);
-        transform: scale(1.05);
-    }
-    .logo:focus {
-        outline-offset: 4px;
-    }
-    .logo:active {
-        transform: scale(0.98);
+        display: block;
     }
     .click-your-name {
         color: #888;
