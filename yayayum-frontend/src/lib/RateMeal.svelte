@@ -76,7 +76,7 @@
             currentScreen.set(Component.MealActions);
         } catch (err) {
             if (err instanceof ApiError && err.status === 409) {
-                error = `Du har redan lämnat en recension idag, ${$selectedUser?.username}! Kom tillbaka imorgon för att betygsätta en ny måltid.`;
+                error = `Du har redan lämnat en recension idag, ${$selectedUser?.username}...`;
             } else if (err instanceof ApiError && err.status === 400) {
                 error = "Ogiltigt betyg. Vänligen välj ett betyg mellan 1-5 stjärnor.";
             } else {
@@ -150,7 +150,7 @@
             </div>
             <p class="rating-text">
                 {#if !selectedDish}
-                    Välj en rätt kanske
+                    
                 {:else if rating === 0}
                     Hur många stjärnor?
                 {:else if rating === 1}
@@ -168,7 +168,6 @@
         </div>
 
         <div class="comment-section">
-            <h3>Alla snuskiga detaljer:</h3>
             <textarea 
             style="width: 75%;"
                 bind:value={comment}
@@ -282,12 +281,11 @@
         background: white;
         border: 2px solid #e0e0e0;
         border-radius: 12px;
-        padding: 1rem;
+        padding: 0.5rem;
         cursor: pointer;
         transition: all 0.2s ease;
         position: relative;
         text-align: center;
-        min-height: 120px;
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -480,7 +478,7 @@
         }
 
         .dish-card {
-            min-height: 100px;
+            min-height: 65px;
         }
 
         .star {
