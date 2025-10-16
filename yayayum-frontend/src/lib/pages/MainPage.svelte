@@ -8,12 +8,25 @@
     import MealInspiration from "../../lib/MealInspiration.svelte";
     import RateMeal from "../../lib/RateMeal.svelte";
     import ManagePage from "../../lib/ManagePage.svelte";
+
+    function goToHomepage() {
+        // Reset user selection and go to user selection screen
+        selectedUser.set(null);
+        currentScreen.set(Component.UserSelection);
+    }
 </script>
 
 <main>
     <div>
         <span>
-            <img src={yayaLogo} class="logo" alt="Yayalogo" />
+            <img
+                src={yayaLogo}
+                class="logo"
+                alt="Yayalogo - Click to go home"
+                on:click={goToHomepage}
+                tabindex="0"
+                on:keydown={(e) => e.key === "Enter" && goToHomepage()}
+            />
         </span>
     </div>
     <h1>YayaYum</h1>
@@ -196,29 +209,44 @@
         flex-direction: column;
         align-items: center;
         justify-content: flex-start;
-        padding: 1em;
+        padding: 0em;
     }
 
     .card {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
         background-color: rgba(255, 255, 255, 0.8); /* semi-transparent card */
         border-radius: 16px;
         padding: 1em;
-        margin-top: 1em;
+        margin-top: 0em;
         box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
     }
 
     h1 {
         color: #ff69b4;
         text-shadow: 1px 1px 2px #fff;
+        margin: 0.5em;
     }
     .logo {
         height: 6em;
-        padding: 1.5em;
+        padding: 0.5em;
         will-change: filter;
-        transition: filter 300ms;
+        transition: all 300ms ease;
+        cursor: pointer;
+        border-radius: 12px;
     }
     .logo:hover {
-        filter: drop-shadow(0 0 2em #646cffaa);
+        filter: drop-shadow(0 0 2em #ff69b4aa);
+        transform: scale(1.05);
+    }
+    .logo:focus {
+        outline-offset: 4px;
+    }
+    .logo:active {
+        transform: scale(0.98);
     }
     .click-your-name {
         color: #888;

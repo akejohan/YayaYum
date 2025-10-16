@@ -64,7 +64,7 @@
             
             await RatingsService.createRating(ratingData);
             
-            alert(`Thank you for rating "${selectedDish!.name}", ${$selectedUser?.username}! Rating: ${rating}/5 stars`);
+            alert(`Tack ${$selectedUser?.username}! ${rating}/5 stjärnor`);
             
             // Reset form
             selectedDish = null;
@@ -93,9 +93,7 @@
 {:else}
     <div class="rate-meal-container">
         <div class="header">
-            <button class="back-button" on:click={goBack}>← Back</button>
-            <h2>Fram med kritiken!</h2>
-            <p class="user-info">Hur smakade det, {$selectedUser?.username}?</p>
+            <h2>Fram med kritiken, {$selectedUser?.username}!</h2>
         </div>
 
         {#if error}
@@ -115,19 +113,18 @@
                     >
                         <div class="dish-number">#{dish.nr}</div>
                         <div class="dish-name">{dish.name}</div>
-                        <div class="dish-price">{dish.price_kr} kr</div>
                         {#if selectedDish?.id === dish.id}
                             <div class="selected-indicator">✓</div>
                         {/if}
                     </button>
                 {/each}
             </div>
-            {#if selectedDish}
+            <!-- {#if selectedDish}
                 <div class="selected-dish-info">
                     <h4>Selected: #{selectedDish.nr} {selectedDish.name}</h4>
                     <p>{selectedDish.description}</p>
                 </div>
-            {/if}
+            {/if} -->
         </div>
 
         <div class="rating-section">
@@ -167,9 +164,10 @@
         <div class="comment-section">
             <h3>Alla snuskiga detaljer:</h3>
             <textarea 
+            style="width: 75%;"
                 bind:value={comment}
                 placeholder="Skriv en bok..."
-                rows="4"
+                rows="3"
                 disabled={!selectedDish}
             ></textarea>
         </div>
@@ -465,8 +463,9 @@
     /* Mobile responsive */
     @media (max-width: 500px) {
         .rate-meal-container {
-            margin: 1rem;
-            padding: 1.5rem;
+            margin: 0rem;
+            padding: 0.5rem;
+            min-width: 17rem;
         }
 
         .dishes-grid {

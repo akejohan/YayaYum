@@ -119,6 +119,7 @@
         
         .dish-list {
             padding: 1rem 0.5rem;
+            min-width: 17em;
         }
     }
 </style>
