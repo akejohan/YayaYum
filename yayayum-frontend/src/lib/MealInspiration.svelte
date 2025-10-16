@@ -1,9 +1,11 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { DishesService, type Dish, DishCategory } from "./api";
+    import { DishesService, type Dish, DishCategory, RatingsService, type Rating } from "./api";
     import DishListItem from "./DishListItem.svelte";
+    import { selectedUser } from "./shared";
 
     let dishes: Dish[] = [];
+    let userRatings: Rating[] = [];
     let loading = true;
     let error: string | null = null;
 
@@ -31,15 +33,40 @@
         }
     }
 
-    onMount(async () => {
+    // Get user rating for a specific dish
+    function getDishRating(dishId: number): number {
+        const rating = userRatings.find(r => r.dish_id === dishId);
+        return rating ? rating.rating : 0;
+    }
+
+    async function fetchData() {
         try {
+            loading = true;
             dishes = await DishesService.getDishes();
+            
+            // Fetch user ratings if user is selected
+            if ($selectedUser) {
+                try {
+                    userRatings = await RatingsService.getRatingsByUser($selectedUser.id);
+                } catch (ratingsErr) {
+                    // If ratings fail, just continue without them
+                    console.warn('Could not load user ratings:', ratingsErr);
+                    userRatings = [];
+                }
+            }
         } catch (err) {
             error = (err as Error).message;
         } finally {
             loading = false;
         }
-    });
+    }
+
+    onMount(fetchData);
+
+    // Refetch ratings when user changes
+    $: if ($selectedUser) {
+        fetchData();
+    }
 </script>
 
 {#if loading}
@@ -55,7 +82,7 @@
                 <h2 class="category-heading">{getCategoryDisplayName(category)}</h2>
                 <div class="category-dishes">
                     {#each categoryDishes as dish (dish.id)}
-                        <DishListItem {dish} />
+                        <DishListItem {dish} rating={getDishRating(dish.id)} />
                     {/each}
                 </div>
             </div>

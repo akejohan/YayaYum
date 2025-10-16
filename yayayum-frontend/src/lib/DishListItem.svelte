@@ -21,9 +21,12 @@
       {/if}
     </div>
     <div class="rating">
-      <!-- {#each Array(5) as _, i}
+      {#each Array(5) as _, i}
         <span class="star" class:filled={i < rating}>★</span>
-      {/each} -->
+      {/each}
+      {#if rating > 0}
+        <span class="rating-number">({rating})</span>
+      {/if}
     </div>
   </div>
   
@@ -101,8 +104,25 @@
     .rating {
       flex-shrink: 0;
       display: flex;
+      align-items: center;
       gap: 2px;
       margin-top: 0.2rem;
+    }
+
+    .star {
+      font-size: 1.2rem;
+      color: #ddd;
+      transition: color 0.2s ease;
+    }
+
+    .star.filled {
+      color: #ffd700;
+    }
+
+    .rating-number {
+      font-size: 0.85rem;
+      color: #666;
+      margin-left: 0.3rem;
     }
   
     /* 📱 Mobilanpassning */
