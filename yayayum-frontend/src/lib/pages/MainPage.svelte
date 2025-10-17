@@ -8,6 +8,7 @@
     import MealInspiration from "../../lib/MealInspiration.svelte";
     import RateMeal from "../../lib/RateMeal.svelte";
     import MyRatings from "../../lib/MyRatings.svelte";
+    import Leaderboard from "../../lib/Leaderboard.svelte";
     import ManagePage from "../../lib/ManagePage.svelte";
 
     function goToHomepage() {
@@ -42,6 +43,8 @@
             <RateMeal />
         {:else if $currentScreen === Component.MyRatings}
             <MyRatings />
+        {:else if $currentScreen === Component.Leaderboard}
+            <Leaderboard />
         {:else if $currentScreen === Component.UserSelection}
             <Users />
         {/if}

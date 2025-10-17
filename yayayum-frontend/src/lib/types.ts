@@ -4,6 +4,7 @@ export enum Component {
     MealInspiration = 'meal-inspiration',
     RateMeal = 'rate-meal',
     MyRatings = 'my-ratings',
+    Leaderboard = 'leaderboard',
 }
 
 export enum Page {

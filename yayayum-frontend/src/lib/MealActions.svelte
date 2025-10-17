@@ -14,6 +14,10 @@
   function handleViewRatings() {
     currentScreen.update(() => Component.MyRatings);
   }
+
+  function handleViewLeaderboard() {
+    currentScreen.update(() => Component.Leaderboard);
+  }
 </script>
 
 <h2>Välkommen, {$selectedUser?.username}!</h2>
@@ -45,6 +49,15 @@
     tabindex="0"
   >
     Recensioner
+  </div>
+  <div 
+    class="card leaderboard" 
+    on:click={handleViewLeaderboard}
+    on:keydown={(e) => e.key === 'Enter' && handleViewLeaderboard()}
+    role="button"
+    tabindex="0"
+  >
+    🏆 Leaderboard
   </div>
 </div>
 
@@ -97,6 +110,10 @@
 
   .card.history {
     background: linear-gradient(135deg, #87ceeb, #5f9ea0);
+  }
+
+  .card.leaderboard {
+    background: linear-gradient(135deg, #ffd700, #ffb347);
   }
 
   .card:hover {
