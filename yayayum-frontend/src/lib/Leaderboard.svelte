@@ -30,6 +30,9 @@
     }
 
     let userStats: UserStats[] = [];
+    let achievementsExpanded = false;
+    let selectedAchievement: Achievement | null = null;
+    let modalUserName: string = '';
 
     // Create a map of dish_id to dish for quick lookup
     $: dishMap = dishes.reduce((map, dish) => {
@@ -142,6 +145,17 @@
     function calculateAchievements(userRatings: Rating[], uniqueDishes: number, consecutiveDays: number): Achievement[] {
         const totalDishes = dishes.length;
         
+        // Count specific dish ratings
+        const baliGorenRatings = userRatings.filter(rating => {
+            const dish = dishMap[rating.dish_id];
+            return dish?.nr === 43; // Bali Goreng
+        }).length;
+        
+        const spicyChiliNoodleRatings = userRatings.filter(rating => {
+            const dish = dishMap[rating.dish_id];
+            return dish?.nr === 7; // Spicy Chili Noodles
+        }).length;
+        
         return [
             {
                 id: 'first_steps',
@@ -177,12 +191,40 @@
                 description: 'Recensera 5 dagar i rad',
                 emoji: '⚡',
                 unlocked: consecutiveDays >= 5
+            },
+            {
+                id: 'bali_goreng_king',
+                name: 'Kung av Bali Goreng',
+                description: 'Ät Bali Goreng 5 gånger',
+                emoji: '👑',
+                unlocked: baliGorenRatings >= 5
+            },
+            {
+                id: 'spicy_chili_king',
+                name: 'Kung av Spicy Chili Noodles',
+                description: 'Ät Spicy Chili Noodles 5 gånger',
+                emoji: '🌶️',
+                unlocked: spicyChiliNoodleRatings >= 5
             }
         ];
     }
 
     function goBack() {
         currentScreen.set(Component.MealActions);
+    }
+
+    function toggleAchievements() {
+        achievementsExpanded = !achievementsExpanded;
+    }
+
+    function showAchievementModal(achievement: Achievement, userName: string) {
+        selectedAchievement = achievement;
+        modalUserName = userName;
+    }
+
+    function hideAchievementModal() {
+        selectedAchievement = null;
+        modalUserName = '';
     }
 
     function getRankEmoji(index: number): string {
@@ -197,13 +239,121 @@
     function getStars(rating: number): string {
         return '★'.repeat(Math.round(rating)) + '☆'.repeat(5 - Math.round(rating));
     }
+
+    // Static list of all possible achievements for the overview
+    function getAllAchievementTypes(): Achievement[] {
+        return [
+            {
+                id: 'first_steps',
+                name: 'Gröngöling',
+                description: 'Skriv 3 recensioner',
+                emoji: '🌱',
+                unlocked: false
+            },
+            {
+                id: 'food_critic',
+                name: 'Kritiker',
+                description: 'Skriv 10 recensioner',
+                emoji: '📝',
+                unlocked: false
+            },
+            {
+                id: 'completionist',
+                name: 'Stormästare',
+                description: 'Recensera alla rätter',
+                emoji: '🎯',
+                unlocked: false
+            },
+            {
+                id: 'consistency',
+                name: 'Fett hungrig',
+                description: 'Recensera 3 dagar i rad',
+                emoji: '🔥',
+                unlocked: false
+            },
+            {
+                id: 'dedication',
+                name: 'Kung av Yaya',
+                description: 'Recensera 5 dagar i rad',
+                emoji: '⚡',
+                unlocked: false
+            },
+            {
+                id: 'bali_goreng_king',
+                name: 'Kung av Bali Goreng',
+                description: 'Ät Bali Goreng 5 gånger',
+                emoji: '👑',
+                unlocked: false
+            },
+            {
+                id: 'spicy_chili_king',
+                name: 'Kung av Spicy Chili Noodles',
+                description: 'Ät Spicy Chili Noodles 5 gånger',
+                emoji: '🌶️',
+                unlocked: false
+            }
+        ];
+    }
 </script>
 
 <div class="leaderboard-container">
     <div class="header">
         <h2>🏆 Leaderboard</h2>
-        <p class="page-info">Rankning baserad på antal recensioner och unika rätter</p>
+        <p class="page-info">Rankning och achivements</p>
     </div>
+
+    {#if !loading && !error && userStats.length > 0}
+        <!-- Global Achievements Overview -->
+        <div class="global-achievements">
+            <div 
+                class="achievements-header" 
+                role="button"
+                tabindex="0"
+                onclick={toggleAchievements}
+                onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && toggleAchievements()}
+            >
+                <h3>🎯 Utmärkelser</h3>
+                <button class="toggle-btn" type="button">
+                    {achievementsExpanded ? '▼' : '▶'}
+                </button>
+            </div>
+            {#if achievementsExpanded}
+                <div class="achievements-overview">
+                {#each getAllAchievementTypes() as achievementType}
+                    {@const unlockedBy = userStats.filter(stats => 
+                        stats.achievements.find(a => a.id === achievementType.id)?.unlocked
+                    )}
+                    <div class="achievement-info-card">
+                        <div class="achievement-header">
+                            <span class="achievement-emoji">{achievementType.emoji}</span>
+                            <div class="achievement-details">
+                                <span class="achievement-name">{achievementType.name}</span>
+                                <span class="achievement-description">{achievementType.description}</span>
+                            </div>
+                        </div>
+                        {#if unlockedBy.length > 0}
+                            <div class="unlocked-users">
+                                <span class="unlocked-label">Upplåst av:</span>
+                                {#each unlockedBy as stats}
+                                    <span class="unlocked-user">
+                                        {stats.user.username}
+                                        {#if stats.user.id === $selectedUser?.id}
+                                            <span class="you-badge">Du</span>
+                                        {/if}
+                                    </span>
+                                {/each}
+                            </div>
+                        {:else}
+                            <div class="locked-info">
+                                <span class="locked-label">Ingen har låst upp denna än</span>
+                            </div>
+                        {/if}
+                    </div>
+                {/each}
+                </div>
+            {/if}
+        </div>
+    {/if}
 
     {#if loading}
         <div class="loading">
@@ -217,7 +367,7 @@
         <div class="empty-state">
             <h3>Inga användare att visa</h3>
             <p>Det finns inga användare med recensioner än.</p>
-            <button class="primary-button" on:click={goBack}>
+            <button class="primary-button" onclick={goBack}>
                 Tillbaka till huvudmenyn
             </button>
         </div>
@@ -243,7 +393,7 @@
                         <div class="stats-grid">
                             <div class="stat">
                                 <span class="stat-value">{stats.totalReviews}</span>
-                                <span class="stat-label">recensioner</span>
+                                <span class="stat-label">rätter</span>
                             </div>
                             <div class="stat">
                                 <span class="stat-value">{stats.uniqueDishes}</span>
@@ -277,20 +427,19 @@
                             </div>
                         {/if}
 
-                        <div class="achievements">
-                            <h4>Utmärkelser:</h4>
-                            <div class="achievements-list">
+                        <div class="user-achievements">
+                            <div class="achievement-icons">
                                 {#each stats.achievements as achievement (achievement.id)}
-                                    <div class="achievement" class:unlocked={achievement.unlocked} class:locked={!achievement.unlocked}>
-                                        <span class="achievement-emoji">{achievement.emoji}</span>
-                                        <div class="achievement-info">
-                                            <span class="achievement-name">{achievement.name}</span>
-                                            <span class="achievement-description">{achievement.description}</span>
-                                        </div>
-                                        {#if achievement.unlocked}
-                                            <span class="unlocked-indicator">✓</span>
-                                        {/if}
-                                    </div>
+                                    <button 
+                                        class="achievement-icon" 
+                                        class:unlocked={achievement.unlocked}
+                                        class:locked={!achievement.unlocked}
+                                        title="{achievement.name}: {achievement.description}"
+                                        onclick={(e) => showAchievementModal(achievement, stats.user.username)}
+                                        aria-label="View {achievement.name} achievement details"
+                                    >
+                                        {achievement.emoji}
+                                    </button>
                                 {/each}
                             </div>
                         </div>
@@ -300,6 +449,50 @@
         </div>
     {/if}
 </div>
+
+<!-- Achievement Modal -->
+{#if selectedAchievement}
+    <div 
+        class="modal-overlay" 
+        onclick={hideAchievementModal} 
+        onkeydown={(e) => e.key === 'Escape' && hideAchievementModal()}
+        role="dialog" 
+        aria-modal="true"
+        tabindex="-1"
+    >
+        <div 
+            class="modal-content achievement-modal" 
+            role="document"
+        >
+            <div class="modal-header">
+                <h3>{selectedAchievement.emoji} {selectedAchievement.name}</h3>
+                <button class="close-button" onclick={hideAchievementModal} aria-label="Stäng modal">
+                    ✕
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="achievement-status">
+                    {#if selectedAchievement.unlocked}
+                        <span class="status-badge unlocked">🎉 Upplåst!</span>
+                    {:else}
+                        <span class="status-badge locked">🔒 Låst</span>
+                    {/if}
+                </div>
+                
+                <p class="achievement-description">
+                    {selectedAchievement.description}
+                </p>
+                
+                {#if modalUserName}
+                    <div class="user-context">
+                        <p><strong>Användare:</strong> {modalUserName}</p>
+                    </div>
+                {/if}
+            </div>
+        </div>
+    </div>
+{/if}
 
 <style>
     .leaderboard-container {
@@ -317,22 +510,6 @@
         position: relative;
     }
 
-    .back-button {
-        position: absolute;
-        left: 0;
-        top: 0;
-        background: #f0f0f0;
-        border: 1px solid #ccc;
-        border-radius: 8px;
-        padding: 0.5rem 1rem;
-        cursor: pointer;
-        transition: background 0.2s;
-    }
-
-    .back-button:hover {
-        background: #e0e0e0;
-    }
-
     .header h2 {
         color: #ff69b4;
         margin: 0 0 0.5rem 0;
@@ -344,6 +521,151 @@
         color: #666;
         margin: 0;
         font-style: italic;
+    }
+
+    .global-achievements {
+        background: linear-gradient(135deg, rgba(255, 105, 180, 0.05), rgba(255, 140, 200, 0.05));
+        border: 1px solid rgba(255, 105, 180, 0.2);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .achievements-header {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 8px;
+        transition: background-color 0.2s ease;
+        margin-bottom: 1rem;
+    }
+
+    .achievements-header:hover {
+        background: rgba(255, 105, 180, 0.1);
+    }
+
+    .achievements-header h3 {
+        margin: 0;
+        color: #ff69b4;
+        font-size: 1.2rem;
+        flex: 1;
+        text-align: center;
+    }
+
+    .toggle-btn {
+        background: none;
+        border: none;
+        color: #ff69b4;
+        font-size: 1rem;
+        cursor: pointer;
+        padding: 0.2rem;
+        min-width: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .achievements-overview {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1rem;
+    }
+
+    .achievement-info-card {
+        background: white;
+        border: 1px solid rgba(255, 105, 180, 0.3);
+        border-radius: 12px;
+        padding: 1rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease;
+    }
+
+    .achievement-info-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .achievement-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.8rem;
+        margin-bottom: 0.8rem;
+    }
+
+    .achievement-emoji {
+        font-size: 2rem;
+        flex-shrink: 0;
+    }
+
+    .achievement-details {
+        flex: 1;
+    }
+
+    .achievement-name {
+        display: block;
+        font-weight: 600;
+        font-size: 1rem;
+        color: #333;
+        margin-bottom: 0.2rem;
+    }
+
+    .achievement-description {
+        display: block;
+        font-size: 0.85rem;
+        color: #666;
+        line-height: 1.3;
+    }
+
+    .unlocked-users {
+        background: rgba(76, 175, 80, 0.1);
+        border: 1px solid rgba(76, 175, 80, 0.3);
+        border-radius: 8px;
+        padding: 0.5rem;
+    }
+
+    .unlocked-label {
+        font-size: 0.8rem;
+        color: #2e7d32;
+        font-weight: 500;
+        margin-bottom: 0.3rem;
+        display: block;
+    }
+
+    .unlocked-user {
+        display: inline-block;
+        background: rgba(76, 175, 80, 0.2);
+        color: #2e7d32;
+        padding: 0.2rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        margin: 0.1rem 0.2rem 0.1rem 0;
+        font-weight: 500;
+    }
+
+    .locked-info {
+        background: rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        padding: 0.5rem;
+    }
+
+    .locked-label {
+        font-size: 0.8rem;
+        color: #666;
+        font-style: italic;
+    }
+
+    .you-badge {
+        background: #ff69b4;
+        color: white;
+        padding: 0.1rem 0.3rem;
+        border-radius: 8px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        margin-left: 0.3rem;
     }
 
     .loading {
@@ -402,15 +724,15 @@
     .leaderboard-list {
         display: flex;
         flex-direction: column;
-        gap: 1.5rem;
+        gap: 1rem;
     }
 
     .user-card {
         display: flex;
         align-items: flex-start;
         background: #fffdfb;
-        border-radius: 16px;
-        padding: 1.5rem;
+        border-radius: 12px;
+        padding: 1rem;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         transition: all 0.2s ease;
         border: 1px solid rgba(0, 0, 0, 0.05);
@@ -428,7 +750,7 @@
     }
 
     .rank-section {
-        margin-right: 1.5rem;
+        margin-right: 1rem;
         flex-shrink: 0;
     }
 
@@ -440,12 +762,12 @@
     }
 
     .rank-emoji {
-        font-size: 2rem;
-        margin-bottom: 0.2rem;
+        font-size: 1.5rem;
+        margin-bottom: 0.1rem;
     }
 
     .rank-number {
-        font-size: 0.9rem;
+        font-size: 0.8rem;
         font-weight: 600;
         color: #666;
     }
@@ -455,10 +777,10 @@
     }
 
     .user-name {
-        font-size: 1.3rem;
+        font-size: 1.1rem;
         font-weight: 600;
         color: #333;
-        margin-bottom: 1rem;
+        margin-bottom: 0.6rem;
     }
 
     .you-indicator {
@@ -471,32 +793,32 @@
     .stats-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 1rem;
-        margin-bottom: 1rem;
+        gap: 0.6rem;
+        margin-bottom: 0.8rem;
     }
 
     .stat {
         text-align: center;
         background: rgba(255, 105, 180, 0.1);
-        border-radius: 8px;
-        padding: 0.8rem 0.5rem;
+        border-radius: 6px;
+        padding: 0.5rem 0.3rem;
         border: 1px solid rgba(255, 105, 180, 0.2);
     }
 
     .stat-value {
         display: block;
-        font-size: 1.5rem;
+        font-size: 1.2rem;
         font-weight: 700;
         color: #ff69b4;
     }
 
     .stat-label {
         display: block;
-        font-size: 0.8rem;
+        font-size: 0.7rem;
         color: #666;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        margin-top: 0.2rem;
+        margin-top: 0.1rem;
     }
 
     .average-stars {
@@ -549,86 +871,68 @@
         font-weight: 600;
     }
 
-    .achievements {
-        margin-top: 1.5rem;
-    }
-
-    .achievements h4 {
-        margin: 0 0 0.8rem 0;
-        font-size: 0.9rem;
-        color: #666;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .achievements-list {
+    .user-achievements {
+        margin-top: 0.6rem;
         display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
+        justify-content: center;
     }
 
-    .achievement {
+    .achievement-icons {
         display: flex;
-        align-items: center;
-        padding: 0.6rem 0.8rem;
-        border-radius: 8px;
+        gap: 0.3rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .achievement-icon {
+        font-size: 1rem;
+        padding: 0.2rem;
+        border-radius: 50%;
+        background: rgba(255, 215, 0, 0.1);
+        border: 1px solid rgba(255, 215, 0, 0.3);
         transition: all 0.2s ease;
-        border: 1px solid transparent;
+        cursor: pointer;
+        outline: none;
+        position: relative;
     }
 
-    .achievement.unlocked {
-        background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(139, 195, 74, 0.1));
-        border-color: rgba(76, 175, 80, 0.3);
+    .achievement-icon:focus {
+        box-shadow: 0 0 0 2px #ff69b4;
     }
 
-    .achievement.locked {
+    .achievement-icon.unlocked {
+        background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 193, 7, 0.2));
+        border-color: rgba(255, 193, 7, 0.5);
+        animation: glow 2s ease-in-out infinite alternate;
+    }
+
+    .achievement-icon.locked {
         background: rgba(0, 0, 0, 0.05);
-        border-color: rgba(0, 0, 0, 0.1);
-        opacity: 0.6;
-    }
-
-    .achievement-emoji {
-        font-size: 1.5rem;
-        margin-right: 0.8rem;
-        flex-shrink: 0;
-    }
-
-    .achievement.locked .achievement-emoji {
+        border-color: rgba(0, 0, 0, 0.2);
+        opacity: 0.4;
         filter: grayscale(1);
-        opacity: 0.5;
+        animation: none;
     }
 
-    .achievement-info {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 0.1rem;
+    @keyframes glow {
+        from {
+            box-shadow: 0 0 5px rgba(255, 193, 7, 0.3);
+        }
+        to {
+            box-shadow: 0 0 10px rgba(255, 193, 7, 0.6);
+        }
     }
 
-    .achievement-name {
-        font-weight: 600;
-        color: #333;
-        font-size: 0.9rem;
+    .achievement-icon.unlocked:hover {
+        transform: scale(1.15);
+        filter: brightness(1.2);
+        box-shadow: 0 2px 8px rgba(255, 193, 7, 0.4);
     }
 
-    .achievement.locked .achievement-name {
-        color: #666;
-    }
-
-    .achievement-description {
-        font-size: 0.8rem;
-        color: #666;
-    }
-
-    .achievement.locked .achievement-description {
-        color: #999;
-    }
-
-    .unlocked-indicator {
-        color: #4caf50;
-        font-weight: bold;
-        font-size: 1.1rem;
-        margin-left: 0.5rem;
+    .achievement-icon.locked:hover {
+        transform: scale(1.05);
+        filter: grayscale(0.8);
+        background: rgba(0, 0, 0, 0.08);
     }
 
     /* 📱 Mobilanpassning */
@@ -648,45 +952,188 @@
         }
 
         .stats-grid {
-            grid-template-columns: 1fr;
-            gap: 0.5rem;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.4rem;
         }
 
         .stat {
-            padding: 0.6rem 0.4rem;
+            padding: 0.4rem 0.2rem;
         }
 
         .stat-value {
-            font-size: 1.2rem;
+            font-size: 1rem;
+        }
+
+        .stat-label {
+            font-size: 0.65rem;
         }
 
         .dishes-list {
             justify-content: center;
         }
 
-        .achievements-list {
-            gap: 0.4rem;
+        .achievements-overview {
+            grid-template-columns: 1fr;
+            gap: 0.8rem;
         }
 
-        .achievement {
-            padding: 0.5rem 0.6rem;
+        .achievement-info-card {
+            padding: 0.8rem;
         }
 
         .achievement-emoji {
-            font-size: 1.2rem;
-            margin-right: 0.6rem;
+            font-size: 1.5rem;
         }
 
         .achievement-name {
-            font-size: 0.8rem;
+            font-size: 0.9rem;
         }
 
         .achievement-description {
-            font-size: 0.7rem;
+            font-size: 0.8rem;
+        }
+
+        .achievement-icons {
+            gap: 0.3rem;
+        }
+
+        .achievement-icon {
+            font-size: 1rem;
+            padding: 0.25rem;
         }
 
         .header h2 {
             font-size: 1.5rem;
+        }
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 1rem;
+    }
+
+    .modal-content {
+        background: white;
+        border-radius: 16px;
+        max-width: 500px;
+        width: 100%;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        animation: modal-appear 0.2s ease-out;
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem 1.5rem 1rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .modal-header h3 {
+        margin: 0;
+        color: #ff69b4;
+        font-size: 1.3rem;
+    }
+
+    .close-button {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #666;
+        padding: 0.25rem;
+        border-radius: 4px;
+        transition: all 0.2s;
+    }
+
+    .close-button:hover {
+        background: #f0f0f0;
+        color: #333;
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .achievement-status {
+        margin-bottom: 1rem;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .status-badge.unlocked {
+        background: #e8f5e8;
+        color: #2d6e2d;
+        border: 1px solid #81c784;
+    }
+
+    .status-badge.locked {
+        background: #f5f5f5;
+        color: #666;
+        border: 1px solid #ccc;
+    }
+
+    .achievement-description {
+        font-size: 1rem;
+        line-height: 1.5;
+        color: #333;
+        margin-bottom: 1rem;
+    }
+
+    .user-context {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-top: 1rem;
+        border-left: 4px solid #ff69b4;
+    }
+
+    .user-context p {
+        margin: 0;
+        color: #555;
+    }
+
+    @keyframes modal-appear {
+        from {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .modal-content {
+            margin: 1rem;
+            max-height: 90vh;
+        }
+
+        .modal-header h3 {
+            font-size: 1.1rem;
+        }
+
+        .close-button {
+            font-size: 1.3rem;
         }
     }
 </style>
