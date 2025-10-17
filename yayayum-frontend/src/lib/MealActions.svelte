@@ -44,7 +44,7 @@
     role="button"
     tabindex="0"
   >
-    Mina recensioner
+    Recensioner
   </div>
 </div>
 

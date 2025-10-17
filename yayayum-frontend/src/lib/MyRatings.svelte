@@ -2,13 +2,15 @@
     import { onMount } from "svelte";
     import { selectedUser, currentScreen } from "./shared";
     import { Component } from "./types";
-    import { RatingsService, DishesService } from "./api";
-    import type { Rating, Dish } from "./api";
+    import { RatingsService, DishesService, UsersService } from "./api";
+    import type { Rating, Dish, User } from "./api";
 
-    let userRatings: Rating[] = [];
+    let allRatings: Rating[] = [];
     let dishes: Dish[] = [];
+    let users: User[] = [];
     let loading = true;
     let error: string | null = null;
+    let selectedFilterUser: User | null = null; // null means show all users
 
     // Create a map of dish_id to dish for quick lookup
     $: dishMap = dishes.reduce((map, dish) => {
@@ -16,30 +18,42 @@
         return map;
     }, {} as Record<number, Dish>);
 
+    // Create a map of user_id to user for quick lookup
+    $: userMap = users.reduce((map, user) => {
+        map[user.id] = user;
+        return map;
+    }, {} as Record<number, User>);
+
+    // Filter ratings based on selected user
+    $: filteredRatings = selectedFilterUser 
+        ? allRatings.filter(rating => rating.user_id === selectedFilterUser.id)
+        : allRatings;
+
     // Sort ratings by date (newest first)
-    $: sortedRatings = userRatings.sort((a, b) => 
+    $: sortedRatings = filteredRatings.sort((a, b) => 
         new Date(b.date).getTime() - new Date(a.date).getTime()
     );
 
     onMount(async () => {
-        if (!$selectedUser) {
-            error = "Ingen användare vald";
-            loading = false;
-            return;
-        }
-
         try {
-            // Load both ratings and dishes
-            const [ratingsResponse, dishesResponse] = await Promise.all([
-                RatingsService.getRatingsByUser($selectedUser.id),
-                DishesService.getDishes()
+            // Load ratings, dishes, and users
+            const [ratingsResponse, dishesResponse, usersResponse] = await Promise.all([
+                RatingsService.getRatings(), // Get all ratings instead of just current user's
+                DishesService.getDishes(),
+                UsersService.getUsers()
             ]);
             
-            userRatings = ratingsResponse;
+            allRatings = ratingsResponse;
             dishes = dishesResponse;
+            users = usersResponse;
+            
+            // Set default filter to current user if they exist
+            if ($selectedUser) {
+                selectedFilterUser = $selectedUser;
+            }
         } catch (err) {
-            error = "Kunde inte ladda dina recensioner";
-            console.error("Error loading user ratings:", err);
+            error = "Kunde inte ladda recensioner";
+            console.error("Error loading ratings:", err);
         } finally {
             loading = false;
         }
@@ -61,18 +75,38 @@
     function getStars(rating: number): string {
         return '★'.repeat(rating) + '☆'.repeat(5 - rating);
     }
+
+    function handleUserFilter(event: Event) {
+        const select = event.target as HTMLSelectElement;
+        const userId = select.value;
+        
+        if (userId === 'all') {
+            selectedFilterUser = null;
+        } else {
+            selectedFilterUser = users.find(user => user.id === parseInt(userId)) || null;
+        }
+    }
 </script>
 
 <div class="my-ratings-container">
     <div class="header">
-        <button class="back-button" on:click={goBack}>← Tillbaka</button>
-        <h2>Mina recensioner</h2>
-        <p class="user-info">Dina tidigare omdömen, {$selectedUser?.username}</p>
+        <h2>Recensioner</h2>
+        <p class="page-info">Alla recensioner från användare</p>
+        
+        <div class="filter-section">
+            <label for="user-filter">Filtrera efter användare:</label>
+            <select id="user-filter" on:change={handleUserFilter} value={selectedFilterUser?.id || 'all'}>
+                <option value="all">Alla användare</option>
+                {#each users as user (user.id)}
+                    <option value={user.id}>{user.username}</option>
+                {/each}
+            </select>
+        </div>
     </div>
 
     {#if loading}
         <div class="loading">
-            <p>Laddar dina recensioner...</p>
+            <p>Laddar recensioner...</p>
         </div>
     {:else if error}
         <div class="error-message">
@@ -80,8 +114,13 @@
         </div>
     {:else if sortedRatings.length === 0}
         <div class="empty-state">
-            <h3>Inga recensioner ännu</h3>
-            <p>Du har inte lämnat några recensioner än. Gå och ät något gott och kom sedan tillbaka för att berätta vad du tyckte!</p>
+            {#if selectedFilterUser}
+                <h3>Inga recensioner från {selectedFilterUser.username}</h3>
+                <p>{selectedFilterUser.username} har inte lämnat några recensioner än.</p>
+            {:else}
+                <h3>Inga recensioner ännu</h3>
+                <p>Ingen har lämnat några recensioner än. Var den första att recensera en maträtt!</p>
+            {/if}
             <button class="primary-button" on:click={goBack}>
                 Tillbaka till huvudmenyn
             </button>
@@ -89,11 +128,16 @@
     {:else}
         <div class="ratings-list">
             <div class="stats">
-                <p class="total-count">Du har lämnat <strong>{sortedRatings.length}</strong> recensioner</p>
+                {#if selectedFilterUser}
+                    <p class="total-count">{selectedFilterUser.username} har lämnat <strong>{sortedRatings.length}</strong> recensioner</p>
+                {:else}
+                    <p class="total-count">Totalt <strong>{sortedRatings.length}</strong> recensioner från alla användare</p>
+                {/if}
             </div>
 
             {#each sortedRatings as rating (rating.id)}
                 {@const dish = dishMap[rating.dish_id]}
+                {@const reviewUser = userMap[rating.user_id]}
                 <div class="rating-card">
                     <div class="rating-header">
                         <div class="dish-info">
@@ -107,6 +151,14 @@
                         <div class="rating-info">
                             <div class="stars">{getStars(rating.rating)}</div>
                             <div class="date">{formatDate(rating.date)}</div>
+                            {#if reviewUser}
+                                <div class="review-user" class:current-user={reviewUser.id === $selectedUser?.id}>
+                                    av {reviewUser.username}
+                                    {#if reviewUser.id === $selectedUser?.id}
+                                        <span class="you-indicator">(Du)</span>
+                                    {/if}
+                                </div>
+                            {/if}
                         </div>
                     </div>
                     
@@ -117,7 +169,7 @@
 
                     {#if rating.description}
                         <div class="user-comment">
-                            <h4>Din kommentar:</h4>
+                            <h4>Kommentar:</h4>
                             <p>"{rating.description}"</p>
                         </div>
                     {/if}
@@ -169,6 +221,44 @@
         color: #666;
         margin: 0;
         font-style: italic;
+    }
+
+    .page-info {
+        color: #666;
+        margin: 0 0 1rem 0;
+        font-style: italic;
+    }
+
+    .filter-section {
+        margin-top: 1.5rem;
+        padding: 1rem;
+        background: rgba(255, 105, 180, 0.05);
+        border-radius: 8px;
+        border: 1px solid rgba(255, 105, 180, 0.1);
+    }
+
+    .filter-section label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #333;
+    }
+
+    .filter-section select {
+        width: 100%;
+        max-width: 300px;
+        padding: 0.5rem;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        background: white;
+        font-size: 1rem;
+        color: #333;
+    }
+
+    .filter-section select:focus {
+        outline: none;
+        border-color: #ff69b4;
+        box-shadow: 0 0 0 2px rgba(255, 105, 180, 0.2);
     }
 
     .loading {
@@ -300,6 +390,24 @@
     .date {
         font-size: 0.85rem;
         color: #888;
+    }
+
+    .review-user {
+        font-size: 0.8rem;
+        color: #666;
+        margin-top: 0.3rem;
+        font-style: italic;
+    }
+
+    .review-user.current-user {
+        color: #ff69b4;
+        font-weight: 500;
+    }
+
+    .you-indicator {
+        color: #ff69b4;
+        font-weight: 600;
+        font-style: normal;
     }
 
     .dish-description {
