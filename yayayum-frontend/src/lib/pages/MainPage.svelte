@@ -12,9 +12,12 @@
     import ManagePage from "../../lib/ManagePage.svelte";
 
     function goToHomepage() {
-        // Reset user selection and go to user selection screen
-        selectedUser.set(null);
-        currentScreen.set(Component.UserSelection);
+        // Go to the appropriate home screen based on whether a user is selected
+        if ($selectedUser) {
+            currentScreen.set(Component.MealActions);
+        } else {
+            currentScreen.set(Component.UserSelection);
+        }
     }
 </script>
 
@@ -51,7 +54,19 @@
     </div>
 
     {#if $selectedUser}
-        <p>Idag är du: {$selectedUser?.username}</p>
+        <div class="user-info">
+            <p>Idag är du: {$selectedUser?.username}</p>
+            <button 
+                class="change-user-btn"
+                on:click={() => {
+                    selectedUser.set(null);
+                    currentScreen.set(Component.UserSelection);
+                }}
+                title="Byt användare"
+            >
+                👤 Byt användare
+            </button>
+        </div>
     {:else}
         <p>Vem vill du vara idag?</p>
 
@@ -270,5 +285,46 @@
     }
     .click-your-name {
         color: #888;
+    }
+
+    .user-info {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .change-user-btn {
+        background: linear-gradient(135deg, rgba(255, 105, 180, 0.1), rgba(255, 140, 200, 0.1));
+        border: 1px solid rgba(255, 105, 180, 0.3);
+        color: #ff69b4;
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .change-user-btn:hover {
+        background: linear-gradient(135deg, rgba(255, 105, 180, 0.2), rgba(255, 140, 200, 0.2));
+        border-color: rgba(255, 105, 180, 0.5);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(255, 105, 180, 0.2);
+    }
+
+    .change-user-btn:active {
+        transform: translateY(0);
+    }
+
+    @media (min-width: 500px) {
+        .user-info {
+            flex-direction: row;
+            align-items: center;
+            gap: 1rem;
+        }
     }
 </style>

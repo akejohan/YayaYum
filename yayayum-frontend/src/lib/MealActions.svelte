@@ -18,9 +18,23 @@
   function handleViewLeaderboard() {
     currentScreen.update(() => Component.Leaderboard);
   }
+
+  function handleChangeUser() {
+    selectedUser.set(null);
+    currentScreen.set(Component.UserSelection);
+  }
 </script>
 
-<h2>Välkommen, {$selectedUser?.username}!</h2>
+<h2>
+  Välkommen, 
+  <button 
+    class="username-button"
+    on:click={handleChangeUser}
+    title="Klicka för att byta användare"
+  >
+    {$selectedUser?.username}!
+  </button>
+</h2>
 
 <div class="card-container">
   <div 
@@ -67,6 +81,32 @@
     color: #ff69b4;
     margin-bottom: 2rem;
     text-shadow: 1px 1px 2px #fff;
+  }
+
+  .username-button {
+    background: none;
+    border: none;
+    color: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+    text-shadow: inherit;
+    cursor: pointer;
+    padding: 0.2rem 0.5rem;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    text-underline-offset: 3px;
+  }
+
+  .username-button:hover {
+    background: rgba(255, 105, 180, 0.1);
+    transform: scale(1.05);
+    text-decoration-style: solid;
+  }
+
+  .username-button:active {
+    transform: scale(0.98);
   }
 
   .card-container {

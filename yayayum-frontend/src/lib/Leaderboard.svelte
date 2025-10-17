@@ -145,35 +145,35 @@
         return [
             {
                 id: 'first_steps',
-                name: 'Första intryck',
+                name: 'Gröngöling',
                 description: 'Skriv 3 recensioner',
                 emoji: '🌱',
                 unlocked: userRatings.length >= 3
             },
             {
                 id: 'food_critic',
-                name: 'Matkritiker',
+                name: 'Kritiker',
                 description: 'Skriv 10 recensioner',
                 emoji: '📝',
                 unlocked: userRatings.length >= 10
             },
             {
                 id: 'completionist',
-                name: 'Kompletterare',
+                name: 'Stormästare',
                 description: 'Recensera alla rätter',
                 emoji: '🎯',
                 unlocked: uniqueDishes >= totalDishes && totalDishes > 0
             },
             {
                 id: 'consistency',
-                name: 'Konsekvent',
+                name: 'Fett hungrig',
                 description: 'Recensera 3 dagar i rad',
                 emoji: '🔥',
                 unlocked: consecutiveDays >= 3
             },
             {
                 id: 'dedication',
-                name: 'Hängiven',
+                name: 'Kung av Yaya',
                 description: 'Recensera 5 dagar i rad',
                 emoji: '⚡',
                 unlocked: consecutiveDays >= 5
