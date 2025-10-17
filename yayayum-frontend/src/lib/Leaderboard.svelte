@@ -32,27 +32,31 @@
     let userStats: UserStats[] = [];
     let achievementsExpanded = false;
     let selectedAchievement: Achievement | null = null;
-    let modalUserName: string = '';
+    let modalUserName: string = "";
 
     // Create a map of dish_id to dish for quick lookup
-    $: dishMap = dishes.reduce((map, dish) => {
-        map[dish.id] = dish;
-        return map;
-    }, {} as Record<number, Dish>);
+    $: dishMap = dishes.reduce(
+        (map, dish) => {
+            map[dish.id] = dish;
+            return map;
+        },
+        {} as Record<number, Dish>,
+    );
 
     onMount(async () => {
         try {
             // Load ratings, dishes, and users
-            const [ratingsResponse, dishesResponse, usersResponse] = await Promise.all([
-                RatingsService.getRatings(),
-                DishesService.getDishes(),
-                UsersService.getUsers()
-            ]);
-            
+            const [ratingsResponse, dishesResponse, usersResponse] =
+                await Promise.all([
+                    RatingsService.getRatings(),
+                    DishesService.getDishes(),
+                    UsersService.getUsers(),
+                ]);
+
             allRatings = ratingsResponse;
             dishes = dishesResponse;
             users = usersResponse;
-            
+
             calculateUserStats();
         } catch (err) {
             error = "Kunde inte ladda leaderboard data";
@@ -63,27 +67,38 @@
     });
 
     function calculateUserStats() {
-        userStats = users.map(user => {
-            const userRatings = allRatings.filter(rating => rating.user_id === user.id);
-            const uniqueDishIds = [...new Set(userRatings.map(rating => rating.dish_id))];
-            
+        userStats = users.map((user) => {
+            const userRatings = allRatings.filter(
+                (rating) => rating.user_id === user.id,
+            );
+            const uniqueDishIds = [
+                ...new Set(userRatings.map((rating) => rating.dish_id)),
+            ];
+
             // Calculate average rating
-            const averageRating = userRatings.length > 0 
-                ? userRatings.reduce((sum, rating) => sum + rating.rating, 0) / userRatings.length 
-                : 0;
+            const averageRating =
+                userRatings.length > 0
+                    ? userRatings.reduce(
+                          (sum, rating) => sum + rating.rating,
+                          0,
+                      ) / userRatings.length
+                    : 0;
 
             // Find top dishes (most reviewed dishes by this user)
-            const dishCounts = userRatings.reduce((counts, rating) => {
-                counts[rating.dish_id] = (counts[rating.dish_id] || 0) + 1;
-                return counts;
-            }, {} as Record<number, number>);
+            const dishCounts = userRatings.reduce(
+                (counts, rating) => {
+                    counts[rating.dish_id] = (counts[rating.dish_id] || 0) + 1;
+                    return counts;
+                },
+                {} as Record<number, number>,
+            );
 
             const topDishes = Object.entries(dishCounts)
                 .map(([dishId, count]) => ({
                     dish: dishMap[parseInt(dishId)],
-                    count: count
+                    count: count,
                 }))
-                .filter(item => item.dish) // Only include dishes we have data for
+                .filter((item) => item.dish) // Only include dishes we have data for
                 .sort((a, b) => b.count - a.count)
                 .slice(0, 3); // Top 3 dishes
 
@@ -91,7 +106,11 @@
             const consecutiveDays = calculateConsecutiveDays(userRatings);
 
             // Calculate achievements
-            const achievements = calculateAchievements(userRatings, uniqueDishIds.length, consecutiveDays);
+            const achievements = calculateAchievements(
+                userRatings,
+                uniqueDishIds.length,
+                consecutiveDays,
+            );
 
             return {
                 user,
@@ -100,7 +119,7 @@
                 averageRating,
                 topDishes,
                 achievements,
-                consecutiveDays
+                consecutiveDays,
             };
         });
 
@@ -117,9 +136,13 @@
         if (userRatings.length === 0) return 0;
 
         // Get unique dates sorted in descending order
-        const uniqueDates = [...new Set(userRatings.map(rating => 
-            new Date(rating.date).toDateString()
-        ))].sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+        const uniqueDates = [
+            ...new Set(
+                userRatings.map((rating) =>
+                    new Date(rating.date).toDateString(),
+                ),
+            ),
+        ].sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
 
         if (uniqueDates.length === 0) return 0;
 
@@ -129,7 +152,9 @@
         for (let i = 1; i < uniqueDates.length; i++) {
             const currentDate = new Date(uniqueDates[i]);
             const previousDate = new Date(uniqueDates[i - 1]);
-            const dayDifference = Math.abs(previousDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24);
+            const dayDifference =
+                Math.abs(previousDate.getTime() - currentDate.getTime()) /
+                (1000 * 60 * 60 * 24);
 
             if (dayDifference === 1) {
                 consecutive++;
@@ -142,70 +167,74 @@
         return maxConsecutive;
     }
 
-    function calculateAchievements(userRatings: Rating[], uniqueDishes: number, consecutiveDays: number): Achievement[] {
+    function calculateAchievements(
+        userRatings: Rating[],
+        uniqueDishes: number,
+        consecutiveDays: number,
+    ): Achievement[] {
         const totalDishes = dishes.length;
-        
+
         // Count specific dish ratings
-        const baliGorenRatings = userRatings.filter(rating => {
+        const baliGorenRatings = userRatings.filter((rating) => {
             const dish = dishMap[rating.dish_id];
             return dish?.nr === 43; // Bali Goreng
         }).length;
-        
-        const spicyChiliNoodleRatings = userRatings.filter(rating => {
+
+        const spicyChiliNoodleRatings = userRatings.filter((rating) => {
             const dish = dishMap[rating.dish_id];
             return dish?.nr === 7; // Spicy Chili Noodles
         }).length;
-        
+
         return [
             {
-                id: 'first_steps',
-                name: 'Gröngöling',
-                description: 'Skriv 3 recensioner',
-                emoji: '🌱',
-                unlocked: userRatings.length >= 3
+                id: "first_steps",
+                name: "Gröngöling",
+                description: "Skriv 3 recensioner",
+                emoji: "🌱",
+                unlocked: userRatings.length >= 3,
             },
             {
-                id: 'food_critic',
-                name: 'Kritiker',
-                description: 'Skriv 10 recensioner',
-                emoji: '📝',
-                unlocked: userRatings.length >= 10
+                id: "food_critic",
+                name: "Kritiker",
+                description: "Skriv 10 recensioner",
+                emoji: "📝",
+                unlocked: userRatings.length >= 10,
             },
             {
-                id: 'completionist',
-                name: 'Stormästare',
-                description: 'Recensera alla rätter',
-                emoji: '🎯',
-                unlocked: uniqueDishes >= totalDishes && totalDishes > 0
+                id: "completionist",
+                name: "Stormästare",
+                description: "Recensera alla rätter",
+                emoji: "🎯",
+                unlocked: uniqueDishes >= totalDishes && totalDishes > 0,
             },
             {
-                id: 'consistency',
-                name: 'Fett hungrig',
-                description: 'Recensera 3 dagar i rad',
-                emoji: '🔥',
-                unlocked: consecutiveDays >= 3
+                id: "consistency",
+                name: "Fett hungrig",
+                description: "Recensera 3 dagar i rad",
+                emoji: "🔥",
+                unlocked: consecutiveDays >= 3,
             },
             {
-                id: 'dedication',
-                name: 'Kung av Yaya',
-                description: 'Recensera 5 dagar i rad',
-                emoji: '⚡',
-                unlocked: consecutiveDays >= 5
+                id: "dedication",
+                name: "Kung av Yaya",
+                description: "Recensera 5 dagar i rad",
+                emoji: "⚡",
+                unlocked: consecutiveDays >= 5,
             },
             {
-                id: 'bali_goreng_king',
-                name: 'Kung av Bali Goreng',
-                description: 'Ät Bali Goreng 5 gånger',
-                emoji: '👑',
-                unlocked: baliGorenRatings >= 5
+                id: "bali_goreng_king",
+                name: "Kung av Bali Goreng",
+                description: "Ät Bali Goreng 5 gånger",
+                emoji: "👑",
+                unlocked: baliGorenRatings >= 5,
             },
             {
-                id: 'spicy_chili_king',
-                name: 'Kung av Spicy Chili Noodles',
-                description: 'Ät Spicy Chili Noodles 5 gånger',
-                emoji: '🌶️',
-                unlocked: spicyChiliNoodleRatings >= 5
-            }
+                id: "spicy_chili_king",
+                name: "Kung av Spicy Chili Noodles",
+                description: "Ät Spicy Chili Noodles 5 gånger",
+                emoji: "🌶️",
+                unlocked: spicyChiliNoodleRatings >= 5,
+            },
         ];
     }
 
@@ -224,74 +253,80 @@
 
     function hideAchievementModal() {
         selectedAchievement = null;
-        modalUserName = '';
+        modalUserName = "";
     }
 
     function getRankEmoji(index: number): string {
         switch (index) {
-            case 0: return "🥇";
-            case 1: return "🥈";
-            case 2: return "🥉";
-            default: return "🏅";
+            case 0:
+                return "🥇";
+            case 1:
+                return "🥈";
+            case 2:
+                return "🥉";
+            default:
+                return "🏅";
         }
     }
 
     function getStars(rating: number): string {
-        return '★'.repeat(Math.round(rating)) + '☆'.repeat(5 - Math.round(rating));
+        return (
+            "★".repeat(Math.round(rating)) + "☆".repeat(5 - Math.round(rating))
+        );
     }
 
     // Static list of all possible achievements for the overview
     function getAllAchievementTypes(): Achievement[] {
         return [
             {
-                id: 'first_steps',
-                name: 'Gröngöling',
-                description: 'Skriv 3 recensioner',
-                emoji: '🌱',
-                unlocked: false
+                id: "first_steps",
+                name: "Gröngöling",
+                description: "Skriv 3 recensioner",
+                emoji: "🌱",
+                unlocked: false,
             },
             {
-                id: 'food_critic',
-                name: 'Kritiker',
-                description: 'Skriv 10 recensioner',
-                emoji: '📝',
-                unlocked: false
+                id: "food_critic",
+                name: "Kritiker",
+                description: "Skriv 10 recensioner",
+                emoji: "📝",
+                unlocked: false,
             },
             {
-                id: 'completionist',
-                name: 'Stormästare',
-                description: 'Recensera alla rätter',
-                emoji: '🎯',
-                unlocked: false
+                id: "completionist",
+                name: "Stormästare",
+                description: "Recensera alla rätter",
+                emoji: "🎯",
+                unlocked: false,
             },
             {
-                id: 'consistency',
-                name: 'Fett hungrig',
-                description: 'Recensera 3 dagar i rad',
-                emoji: '🔥',
-                unlocked: false
+                id: "consistency",
+                name: "Fett hungrig",
+                description: "Recensera 3 dagar i rad",
+                emoji: "🔥",
+                unlocked: false,
             },
             {
-                id: 'dedication',
-                name: 'Kung av Yaya',
-                description: 'Recensera 5 dagar i rad',
-                emoji: '⚡',
-                unlocked: false
+                id: "dedication",
+                name: "Kung av Yaya",
+                description: "Recensera 5 dagar i rad",
+                emoji: "⚡",
+                unlocked: false,
             },
             {
-                id: 'bali_goreng_king',
-                name: 'Kung av Bali Goreng',
-                description: 'Ät Bali Goreng 5 gånger',
-                emoji: '👑',
-                unlocked: false
+                id: "bali_goreng_king",
+                name: "Kung av Bali Goreng",
+                description: "Ät Bali Goreng 5 gånger",
+                emoji: "👑",
+                unlocked: false,
             },
             {
-                id: 'spicy_chili_king',
-                name: 'Kung av Spicy Chili Noodles',
-                description: 'Ät Spicy Chili Noodles 5 gånger',
-                emoji: '🌶️',
-                unlocked: false
-            }
+                id: "spicy_chili_king",
+                name: "Kung av Spicy Chili Noodles",
+                description: "Ät Spicy Chili Noodles 5 gånger",
+                emoji: "🌶️",
+                unlocked: false,
+            },
         ];
     }
 </script>
@@ -305,51 +340,67 @@
     {#if !loading && !error && userStats.length > 0}
         <!-- Global Achievements Overview -->
         <div class="global-achievements">
-            <div 
-                class="achievements-header" 
+            <div
+                class="achievements-header"
                 role="button"
                 tabindex="0"
                 onclick={toggleAchievements}
-                onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && toggleAchievements()}
+                onkeydown={(e) =>
+                    (e.key === "Enter" || e.key === " ") &&
+                    toggleAchievements()}
             >
                 <h3>🎯 Utmärkelser</h3>
                 <button class="toggle-btn" type="button">
-                    {achievementsExpanded ? '▼' : '▶'}
+                    {achievementsExpanded ? "▼" : "▶"}
                 </button>
             </div>
             {#if achievementsExpanded}
                 <div class="achievements-overview">
-                {#each getAllAchievementTypes() as achievementType}
-                    {@const unlockedBy = userStats.filter(stats => 
-                        stats.achievements.find(a => a.id === achievementType.id)?.unlocked
-                    )}
-                    <div class="achievement-info-card">
-                        <div class="achievement-header">
-                            <span class="achievement-emoji">{achievementType.emoji}</span>
-                            <div class="achievement-details">
-                                <span class="achievement-name">{achievementType.name}</span>
-                                <span class="achievement-description">{achievementType.description}</span>
+                    {#each getAllAchievementTypes() as achievementType}
+                        {@const unlockedBy = userStats.filter(
+                            (stats) =>
+                                stats.achievements.find(
+                                    (a) => a.id === achievementType.id,
+                                )?.unlocked,
+                        )}
+                        <div class="achievement-info-card">
+                            <div class="achievement-header">
+                                <span class="achievement-emoji"
+                                    >{achievementType.emoji}</span
+                                >
+                                <div class="achievement-details">
+                                    <span class="achievement-name"
+                                        >{achievementType.name}</span
+                                    >
+                                    <span class="achievement-description"
+                                        >{achievementType.description}</span
+                                    >
+                                </div>
                             </div>
+                            {#if unlockedBy.length > 0}
+                                <div class="unlocked-users">
+                                    <span class="unlocked-label"
+                                        >Upplåst av:</span
+                                    >
+                                    {#each unlockedBy as stats}
+                                        <span class="unlocked-user">
+                                            {stats.user.username}
+                                            {#if stats.user.id === $selectedUser?.id}
+                                                <span class="you-badge">Du</span
+                                                >
+                                            {/if}
+                                        </span>
+                                    {/each}
+                                </div>
+                            {:else}
+                                <div class="locked-info">
+                                    <span class="locked-label"
+                                        >Ingen har låst upp denna än</span
+                                    >
+                                </div>
+                            {/if}
                         </div>
-                        {#if unlockedBy.length > 0}
-                            <div class="unlocked-users">
-                                <span class="unlocked-label">Upplåst av:</span>
-                                {#each unlockedBy as stats}
-                                    <span class="unlocked-user">
-                                        {stats.user.username}
-                                        {#if stats.user.id === $selectedUser?.id}
-                                            <span class="you-badge">Du</span>
-                                        {/if}
-                                    </span>
-                                {/each}
-                            </div>
-                        {:else}
-                            <div class="locked-info">
-                                <span class="locked-label">Ingen har låst upp denna än</span>
-                            </div>
-                        {/if}
-                    </div>
-                {/each}
+                    {/each}
                 </div>
             {/if}
         </div>
@@ -374,42 +425,52 @@
     {:else}
         <div class="leaderboard-list">
             {#each userStats as stats, index (stats.user.id)}
-                <div class="user-card" class:current-user={stats.user.id === $selectedUser?.id}>
-                    <div class="rank-section">
-                        <div class="rank-badge">
-                            <span class="rank-emoji">{getRankEmoji(index)}</span>
-                            <span class="rank-number">#{index + 1}</span>
-                        </div>
-                    </div>
-                    
+                <div
+                    class="user-card"
+                    class:current-user={stats.user.id === $selectedUser?.id}
+                >
                     <div class="user-info">
-                        <div class="user-name">
-                            {stats.user.username}
-                            {#if stats.user.id === $selectedUser?.id}
-                                <span class="you-indicator">(Du)</span>
-                            {/if}
+                        <div class="rank-section">
+                            <div class="rank-badge">
+                                <span class="rank-emoji"
+                                    >{getRankEmoji(index)}</span
+                                >
+                                <span class="rank-number">#{index + 1}</span>
+                            </div>
+                            <div class="user-name">
+                                {stats.user.username}
+                                {#if stats.user.id === $selectedUser?.id}
+                                    <span class="you-indicator">(Du)</span>
+                                {/if}
+                            </div>
                         </div>
-                        
+
                         <div class="stats-grid">
                             <div class="stat">
-                                <span class="stat-value">{stats.totalReviews}</span>
+                                <span class="stat-value"
+                                    >{stats.totalReviews}</span
+                                >
                                 <span class="stat-label">rätter</span>
                             </div>
                             <div class="stat">
-                                <span class="stat-value">{stats.uniqueDishes}</span>
+                                <span class="stat-value"
+                                    >{stats.uniqueDishes}</span
+                                >
                                 <span class="stat-label">unika rätter</span>
                             </div>
                             <div class="stat">
-                                <span class="stat-value">{stats.averageRating.toFixed(1)}</span>
+                                <span class="stat-value"
+                                    >{stats.averageRating.toFixed(1)}</span
+                                >
                                 <span class="stat-label">snittbetyg</span>
                             </div>
                         </div>
 
-                        {#if stats.averageRating > 0}
+                        <!-- {#if stats.averageRating > 0}
                             <div class="average-stars">
                                 {getStars(stats.averageRating)}
                             </div>
-                        {/if}
+                        {/if} -->
 
                         {#if stats.topDishes.length > 0}
                             <div class="top-dishes">
@@ -417,9 +478,12 @@
                                 <div class="dishes-list">
                                     {#each stats.topDishes as dishStat (dishStat.dish.id)}
                                         <span class="dish-tag">
-                                            #{dishStat.dish.nr} {dishStat.dish.name}
+                                            #{dishStat.dish.nr}
+                                            {dishStat.dish.name}
                                             {#if dishStat.count > 1}
-                                                <span class="count-badge">×{dishStat.count}</span>
+                                                <span class="count-badge"
+                                                    >×{dishStat.count}</span
+                                                >
                                             {/if}
                                         </span>
                                     {/each}
@@ -430,12 +494,16 @@
                         <div class="user-achievements">
                             <div class="achievement-icons">
                                 {#each stats.achievements as achievement (achievement.id)}
-                                    <button 
-                                        class="achievement-icon" 
+                                    <button
+                                        class="achievement-icon"
                                         class:unlocked={achievement.unlocked}
                                         class:locked={!achievement.unlocked}
                                         title="{achievement.name}: {achievement.description}"
-                                        onclick={(e) => showAchievementModal(achievement, stats.user.username)}
+                                        onclick={(e) =>
+                                            showAchievementModal(
+                                                achievement,
+                                                stats.user.username,
+                                            )}
                                         aria-label="View {achievement.name} achievement details"
                                     >
                                         {achievement.emoji}
@@ -452,25 +520,26 @@
 
 <!-- Achievement Modal -->
 {#if selectedAchievement}
-    <div 
-        class="modal-overlay" 
-        onclick={hideAchievementModal} 
-        onkeydown={(e) => e.key === 'Escape' && hideAchievementModal()}
-        role="dialog" 
+    <div
+        class="modal-overlay"
+        onclick={hideAchievementModal}
+        onkeydown={(e) => e.key === "Escape" && hideAchievementModal()}
+        role="dialog"
         aria-modal="true"
         tabindex="-1"
     >
-        <div 
-            class="modal-content achievement-modal" 
-            role="document"
-        >
+        <div class="modal-content achievement-modal" role="document">
             <div class="modal-header">
                 <h3>{selectedAchievement.emoji} {selectedAchievement.name}</h3>
-                <button class="close-button" onclick={hideAchievementModal} aria-label="Stäng modal">
+                <button
+                    class="close-button"
+                    onclick={hideAchievementModal}
+                    aria-label="Stäng modal"
+                >
                     ✕
                 </button>
             </div>
-            
+
             <div class="modal-body">
                 <div class="achievement-status">
                     {#if selectedAchievement.unlocked}
@@ -479,11 +548,11 @@
                         <span class="status-badge locked">🔒 Låst</span>
                     {/if}
                 </div>
-                
+
                 <p class="achievement-description">
                     {selectedAchievement.description}
                 </p>
-                
+
                 {#if modalUserName}
                     <div class="user-context">
                         <p><strong>Användare:</strong> {modalUserName}</p>
@@ -524,10 +593,14 @@
     }
 
     .global-achievements {
-        background: linear-gradient(135deg, rgba(255, 105, 180, 0.05), rgba(255, 140, 200, 0.05));
+        background: linear-gradient(
+            135deg,
+            rgba(255, 105, 180, 0.05),
+            rgba(255, 140, 200, 0.05)
+        );
         border: 1px solid rgba(255, 105, 180, 0.2);
         border-radius: 12px;
-        padding: 1.5rem;
+        padding: 0.5rem;
         margin-bottom: 2rem;
     }
 
@@ -746,19 +819,27 @@
 
     .user-card.current-user {
         border: 2px solid #ff69b4;
-        background: linear-gradient(135deg, rgba(255, 105, 180, 0.05), rgba(255, 140, 200, 0.05));
+        background: linear-gradient(
+            135deg,
+            rgba(255, 105, 180, 0.05),
+            rgba(255, 140, 200, 0.05)
+        );
     }
 
     .rank-section {
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
         margin-right: 1rem;
         flex-shrink: 0;
     }
 
     .rank-badge {
         display: flex;
-        flex-direction: column;
+        flex-direction: row;
         align-items: center;
         text-align: center;
+        margin-right: 20px;
     }
 
     .rank-emoji {
@@ -901,7 +982,11 @@
     }
 
     .achievement-icon.unlocked {
-        background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 193, 7, 0.2));
+        background: linear-gradient(
+            135deg,
+            rgba(255, 215, 0, 0.2),
+            rgba(255, 193, 7, 0.2)
+        );
         border-color: rgba(255, 193, 7, 0.5);
         animation: glow 2s ease-in-out infinite alternate;
     }
