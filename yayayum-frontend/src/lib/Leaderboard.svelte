@@ -201,7 +201,6 @@
 
 <div class="leaderboard-container">
     <div class="header">
-        <button class="back-button" on:click={goBack}>← Tillbaka</button>
         <h2>🏆 Leaderboard</h2>
         <p class="page-info">Rankning baserad på antal recensioner och unika rätter</p>
     </div>
