@@ -6,7 +6,8 @@
     import { selectedUser } from "./shared";
 
     let dishes: Dish[] = [];
-    let userRatings: Rating[] = [];
+    let allRatings: Rating[] = []; // All ratings from all users
+    let userRatings: Rating[] = []; // Only current user's ratings
     let loading = true;
     let error: string | null = null;
     
@@ -104,23 +105,33 @@
 
     // Get all ratings for a specific dish with user details
     function getDishRatings(dishId: number) {
-        return userRatings.filter(r => r.dish_id === dishId);
+        return allRatings.filter(r => r.dish_id === dishId);
     }
 
     async function fetchData() {
         try {
             loading = true;
-            dishes = await DishesService.getDishes();
             
-            // Fetch user ratings if user is selected
+            // Always fetch dishes and all ratings
+            const [dishesResponse, allRatingsResponse] = await Promise.all([
+                DishesService.getDishes(),
+                RatingsService.getRatings()
+            ]);
+            
+            dishes = dishesResponse;
+            allRatings = allRatingsResponse;
+            
+            // Fetch user-specific ratings if user is selected
             if ($selectedUser) {
                 try {
                     userRatings = await RatingsService.getRatingsByUser($selectedUser.id);
                 } catch (ratingsErr) {
-                    // If ratings fail, just continue without them
+                    // If user ratings fail, just continue without them
                     console.warn('Could not load user ratings:', ratingsErr);
                     userRatings = [];
                 }
+            } else {
+                userRatings = [];
             }
         } catch (err) {
             error = (err as Error).message;
@@ -208,8 +219,8 @@
                         >
                             <DishListItem 
                                 {dish} 
-                                rating={getDishRating(dish.id)} 
-                                eatenCount={getDishEatenCount(dish.id)}
+                                allRatings={allRatings}
+                                currentUserEatenCount={getDishEatenCount(dish.id)}
                             />
                         </div>
                     {/each}
@@ -257,7 +268,7 @@
                 </div>
 
                 <div class="ratings-history">
-                    <h3>Recensioner ({getDishRatings(selectedDishForDetails.id).length})</h3>
+                    <h3>Alla recensioner ({getDishRatings(selectedDishForDetails.id).length})</h3>
                     
                     {#if getDishRatings(selectedDishForDetails.id).length > 0}
                         <div class="ratings-list">
@@ -281,6 +292,12 @@
                                     </div>
                                     {#if rating.description}
                                         <p class="rating-comment">"{rating.description}"</p>
+                                    {/if}
+                                    <!-- Add user indicator if this is the current user's rating -->
+                                    {#if $selectedUser && rating.user_id === $selectedUser.id}
+                                        <div class="current-user-indicator">
+                                            <span class="user-badge">Din recension</span>
+                                        </div>
                                     {/if}
                                 </div>
                             {/each}
@@ -621,6 +638,23 @@
         font-style: italic;
         color: #555;
         line-height: 1.4;
+    }
+
+    .current-user-indicator {
+        margin-top: 0.5rem;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .user-badge {
+        background: linear-gradient(135deg, #ff7e6b, #ff9985);
+        color: white;
+        padding: 0.2rem 0.6rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
     .no-ratings {
