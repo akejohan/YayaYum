@@ -11,12 +11,22 @@
     let loading = true;
     let error: string | null = null;
 
+    interface Achievement {
+        id: string;
+        name: string;
+        description: string;
+        emoji: string;
+        unlocked: boolean;
+    }
+
     interface UserStats {
         user: User;
         totalReviews: number;
         uniqueDishes: number;
         averageRating: number;
         topDishes: { dish: Dish; count: number }[];
+        achievements: Achievement[];
+        consecutiveDays: number;
     }
 
     let userStats: UserStats[] = [];
@@ -74,12 +84,20 @@
                 .sort((a, b) => b.count - a.count)
                 .slice(0, 3); // Top 3 dishes
 
+            // Calculate consecutive days
+            const consecutiveDays = calculateConsecutiveDays(userRatings);
+
+            // Calculate achievements
+            const achievements = calculateAchievements(userRatings, uniqueDishIds.length, consecutiveDays);
+
             return {
                 user,
                 totalReviews: userRatings.length,
                 uniqueDishes: uniqueDishIds.length,
                 averageRating,
-                topDishes
+                topDishes,
+                achievements,
+                consecutiveDays
             };
         });
 
@@ -90,6 +108,77 @@
             }
             return b.uniqueDishes - a.uniqueDishes;
         });
+    }
+
+    function calculateConsecutiveDays(userRatings: Rating[]): number {
+        if (userRatings.length === 0) return 0;
+
+        // Get unique dates sorted in descending order
+        const uniqueDates = [...new Set(userRatings.map(rating => 
+            new Date(rating.date).toDateString()
+        ))].sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+
+        if (uniqueDates.length === 0) return 0;
+
+        let consecutive = 1;
+        let maxConsecutive = 1;
+
+        for (let i = 1; i < uniqueDates.length; i++) {
+            const currentDate = new Date(uniqueDates[i]);
+            const previousDate = new Date(uniqueDates[i - 1]);
+            const dayDifference = Math.abs(previousDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24);
+
+            if (dayDifference === 1) {
+                consecutive++;
+                maxConsecutive = Math.max(maxConsecutive, consecutive);
+            } else {
+                consecutive = 1;
+            }
+        }
+
+        return maxConsecutive;
+    }
+
+    function calculateAchievements(userRatings: Rating[], uniqueDishes: number, consecutiveDays: number): Achievement[] {
+        const totalDishes = dishes.length;
+        
+        return [
+            {
+                id: 'first_steps',
+                name: 'Första intryck',
+                description: 'Skriv 3 recensioner',
+                emoji: '🌱',
+                unlocked: userRatings.length >= 3
+            },
+            {
+                id: 'food_critic',
+                name: 'Matkritiker',
+                description: 'Skriv 10 recensioner',
+                emoji: '📝',
+                unlocked: userRatings.length >= 10
+            },
+            {
+                id: 'completionist',
+                name: 'Kompletterare',
+                description: 'Recensera alla rätter',
+                emoji: '🎯',
+                unlocked: uniqueDishes >= totalDishes && totalDishes > 0
+            },
+            {
+                id: 'consistency',
+                name: 'Konsekvent',
+                description: 'Recensera 3 dagar i rad',
+                emoji: '🔥',
+                unlocked: consecutiveDays >= 3
+            },
+            {
+                id: 'dedication',
+                name: 'Hängiven',
+                description: 'Recensera 5 dagar i rad',
+                emoji: '⚡',
+                unlocked: consecutiveDays >= 5
+            }
+        ];
     }
 
     function goBack() {
@@ -188,6 +277,24 @@
                                 </div>
                             </div>
                         {/if}
+
+                        <div class="achievements">
+                            <h4>Utmärkelser:</h4>
+                            <div class="achievements-list">
+                                {#each stats.achievements as achievement (achievement.id)}
+                                    <div class="achievement" class:unlocked={achievement.unlocked} class:locked={!achievement.unlocked}>
+                                        <span class="achievement-emoji">{achievement.emoji}</span>
+                                        <div class="achievement-info">
+                                            <span class="achievement-name">{achievement.name}</span>
+                                            <span class="achievement-description">{achievement.description}</span>
+                                        </div>
+                                        {#if achievement.unlocked}
+                                            <span class="unlocked-indicator">✓</span>
+                                        {/if}
+                                    </div>
+                                {/each}
+                            </div>
+                        </div>
                     </div>
                 </div>
             {/each}
@@ -443,6 +550,88 @@
         font-weight: 600;
     }
 
+    .achievements {
+        margin-top: 1.5rem;
+    }
+
+    .achievements h4 {
+        margin: 0 0 0.8rem 0;
+        font-size: 0.9rem;
+        color: #666;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .achievements-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .achievement {
+        display: flex;
+        align-items: center;
+        padding: 0.6rem 0.8rem;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        border: 1px solid transparent;
+    }
+
+    .achievement.unlocked {
+        background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(139, 195, 74, 0.1));
+        border-color: rgba(76, 175, 80, 0.3);
+    }
+
+    .achievement.locked {
+        background: rgba(0, 0, 0, 0.05);
+        border-color: rgba(0, 0, 0, 0.1);
+        opacity: 0.6;
+    }
+
+    .achievement-emoji {
+        font-size: 1.5rem;
+        margin-right: 0.8rem;
+        flex-shrink: 0;
+    }
+
+    .achievement.locked .achievement-emoji {
+        filter: grayscale(1);
+        opacity: 0.5;
+    }
+
+    .achievement-info {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 0.1rem;
+    }
+
+    .achievement-name {
+        font-weight: 600;
+        color: #333;
+        font-size: 0.9rem;
+    }
+
+    .achievement.locked .achievement-name {
+        color: #666;
+    }
+
+    .achievement-description {
+        font-size: 0.8rem;
+        color: #666;
+    }
+
+    .achievement.locked .achievement-description {
+        color: #999;
+    }
+
+    .unlocked-indicator {
+        color: #4caf50;
+        font-weight: bold;
+        font-size: 1.1rem;
+        margin-left: 0.5rem;
+    }
+
     /* 📱 Mobilanpassning */
     @media (max-width: 600px) {
         .leaderboard-container {
@@ -474,6 +663,27 @@
 
         .dishes-list {
             justify-content: center;
+        }
+
+        .achievements-list {
+            gap: 0.4rem;
+        }
+
+        .achievement {
+            padding: 0.5rem 0.6rem;
+        }
+
+        .achievement-emoji {
+            font-size: 1.2rem;
+            margin-right: 0.6rem;
+        }
+
+        .achievement-name {
+            font-size: 0.8rem;
+        }
+
+        .achievement-description {
+            font-size: 0.7rem;
         }
 
         .header h2 {
